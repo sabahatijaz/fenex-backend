@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_PASSWORD: $DB_PASS
+    networks:
+      - fenex-network
+    volumes:
+      - fenex_data_propto:/var/lib/postgresql/data
+      - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+
+  redis:
+    image: redis:latest
+    networks:
+      - fenex-network
+
+  fastapi:
+    build:
+      context: ./app
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      DATABASE_URL: postgresql://postgres:your_superuser_password@postgres/fastapi
+      REDIS_URL: redis://redis:6379/0
+    networks:
+      - fenex-network
+    ports:
+      - "8000:8000"
+    entrypoint: ["/bin/bash", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+
+  init-db:
+    image: postgres:latest
+    depends_on:
+      - postgres
+    entrypoint: ["/bin/bash", "-c", "sleep 10 && /init-db.sh"]
+    environment:
+      POSTGRES_PASSWORD: $DB_PASS
+    networks:
+      - fenex-network
+
+networks:
+  fenex-network:
+    driver: bridge
+
+volumes:
+  fenex_data_propto:

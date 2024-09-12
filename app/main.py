@@ -2,8 +2,8 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
-from .crud import user, site, quotation, product
-from .schemas import user_schemas, site_schemas, product_schemas, quotation_schemas
+from app.crud import user, site, quotation, product
+from app.schemas import user_schemas, site_schemas, product_schemas, quotation_schemas
 from app.crud import user as user_crud, site as site_crud, quotation as quotation_crud, product as product_crud
 from app.database import init_db, get_db
 
