@@ -4,10 +4,12 @@ from sqlalchemy.orm import declarative_base
 #from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from. import models
+import os
+from dotenv import load_dotenv
 # SQLAlchemy database URL
 #SQLALCHEMY_DATABASE_URL = "sqlite:///./test1.db"
-
-SQLALCHEMY_DATABASE_URL = "postgresql://postgres:datapassword@localhost:5432/fastapi"
+load_dotenv()
+SQLALCHEMY_DATABASE_URL =os.getenv('DATABASE_URL') 
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
