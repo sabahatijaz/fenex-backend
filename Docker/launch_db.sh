@@ -10,6 +10,8 @@ DATA_VOLUME="fenex_data_propto"
 ENV_FILE="../.env"
 NETWORK_NAME="host"
 POSTGRES_PASSWORD="datapassword" # Set your desired superuser password here
+HOST_PORT=5433  # Port on the host
+NEW_CONTAINER_PORT=5433 # Port in the container after modifying postgresql.conf
 
 # Ensure .env file exists
 if [ ! -f "$ENV_FILE" ]; then
@@ -35,26 +37,25 @@ else
   echo "No existing container found with name: $CONTAINER_NAME"
 fi
 
-# Run the Docker container
+# Run the Docker container with the PGPORT variable set to change the PostgreSQL port on startup
 echo "Running Docker container: $CONTAINER_NAME..."
 docker run --restart=unless-stopped -d \
   --name "$CONTAINER_NAME" \
   --network "$NETWORK_NAME" \
   --env-file "$ENV_FILE" \
   -e POSTGRES_PASSWORD="$POSTGRES_PASSWORD" \
+  -e PGPORT="$NEW_CONTAINER_PORT" \
   -v "$DATA_VOLUME:/var/lib/postgresql/data" \
+  -p "$HOST_PORT:$NEW_CONTAINER_PORT" \
   "$IMAGE_NAME" || { echo "Failed to run container"; exit 1; }
 
 # Wait for the container to initialize
 echo "Waiting for PostgreSQL to initialize..."
 sleep 10 # Adjust this time if necessary
 
-# Update pg_hba.conf to use md5 authentication
-echo "Updating pg_hba.conf to use md5 authentication..."
-docker exec -it "$CONTAINER_NAME" bash -c "sed -i \"s/local   all             all                                     trust/local   all             all                                     md5/\" /var/lib/postgresql/data/pg_hba.conf"
+# Verify if the container is up and running with the correct port
+echo "Verifying PostgreSQL port in the container..."
+docker exec -it "$CONTAINER_NAME" cat /var/lib/postgresql/data/postgresql.conf | grep port
 
-# Restart PostgreSQL to apply changes
-echo "Restarting PostgreSQL to apply changes..."
-docker restart "$CONTAINER_NAME" || { echo "Failed to restart container"; exit 1; }
+echo "PostgreSQL is running with port $NEW_CONTAINER_PORT."
 
-echo "PostgreSQL container is running with md5 authentication."

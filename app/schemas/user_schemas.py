@@ -17,5 +17,18 @@ class UserResponse(BaseModel):
     email: EmailStr
 
     class Config:
-        dict = ConfigDict()
-        from_attributes = True
+        orm_mode = True
+
+# Schema for user login
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+# Schema for token response
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+# Schema for token data
+class TokenData(BaseModel):
+    username: str

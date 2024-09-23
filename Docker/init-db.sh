@@ -5,7 +5,7 @@ DB_NAME="fastapi"
 DB_USER="fenex"
 DB_PASS="fenex" # Set the password for the 'fenex' user here
 DB_HOST="localhost"
-DB_PORT="5432"
+DB_PORT="5433"
 
 # Function to check if a database exists
 database_exists() {

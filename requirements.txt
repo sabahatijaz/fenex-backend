@@ -30,3 +30,6 @@ starlette
 typing_extensions
 uvicorn
 python-dotenv
+python-jose
+databases
+asyncpg

@@ -1,11 +1,10 @@
-# seed_data.py
-
-from sqlalchemy.orm import Session
-from app.database import SessionLocal, init_db
+import asyncio
+from app.database import Database
 from app.models import User, Product, Site, Quotation  # Adjust imports based on your project structure
 from app.auth import get_password_hash
 
-def seed_users(db: Session):
+# Seeding users asynchronously
+async def seed_users(db):
     """Seed initial users."""
     user1 = User(
         username="admin",
@@ -17,11 +16,13 @@ def seed_users(db: Session):
         email="user1@example.com",
         hashed_password=get_password_hash("user123")
     )
-    db.add_all([user1, user2])
-    db.commit()
+    async with db.async_session() as session:
+        session.add_all([user1, user2])
+        await session.commit()
     print("Seeded users.")
 
-def seed_products(db: Session):
+# Seeding products asynchronously
+async def seed_products(db):
     """Seed initial products."""
     product1 = Product(
         product_name="Glass Product",
@@ -34,11 +35,13 @@ def seed_products(db: Session):
         stainless_steel_price=30.0,
         fix_cost_price=5.0
     )
-    db.add_all([product1, product2])
-    db.commit()
+    async with db.async_session() as session:
+        session.add_all([product1, product2])
+        await session.commit()
     print("Seeded products.")
 
-def seed_sites(db: Session):
+# Seeding sites asynchronously
+async def seed_sites(db):
     """Seed initial sites."""
     site1 = Site(
         sitename="Site A",
@@ -52,11 +55,13 @@ def seed_sites(db: Session):
         site_type="commercial",
         user_id=2  # Ensure this user_id exists
     )
-    db.add_all([site1, site2])
-    db.commit()
+    async with db.async_session() as session:
+        session.add_all([site1, site2])
+        await session.commit()
     print("Seeded sites.")
 
-def seed_quotations(db: Session):
+# Seeding quotations asynchronously
+async def seed_quotations(db):
     """Seed initial quotations."""
     quotation1 = Quotation(
         site_id=1,  # Ensure this site_id exists
@@ -70,21 +75,24 @@ def seed_quotations(db: Session):
         width=150.0,
         height=100.0
     )
-    db.add_all([quotation1, quotation2])
-    db.commit()
+    async with db.async_session() as session:
+        session.add_all([quotation1, quotation2])
+        await session.commit()
     print("Seeded quotations.")
 
-def run_seeding():
+# Run all seeding functions
+async def run_seeding():
     """Run all seeding functions."""
-    init_db()  # Ensure tables are created before seeding
-    db = SessionLocal()
+    db = Database()
+    await db.connect()  # Connect to the database
     try:
-        seed_users(db)
-        seed_products(db)
-        seed_sites(db)
-        seed_quotations(db)
+        await db.init_db()  # Ensure tables are created before seeding
+        await seed_users(db)
+        await seed_products(db)
+        await seed_sites(db)
+        await seed_quotations(db)
     finally:
-        db.close()
+        await db.disconnect()  # Disconnect from the database
 
 if __name__ == "__main__":
-    run_seeding()
+    asyncio.run(run_seeding())  # Run the seeding asynchronously

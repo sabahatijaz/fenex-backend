@@ -15,19 +15,27 @@ class User(Base):
     username = Column(String, index=True)
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
+    # Relationship with Site (back_populates matches the 'user' relationship in Site)
     sites = relationship("Site", back_populates="user")
 
-# Create the Site table model
 class Site(Base):
     __tablename__ = 'sitetable'
+    
     id = Column(Integer, primary_key=True, index=True)
-    sitename = Column(String, index=True)
-    site_location = Column(String)
-    site_type = Column(String)
-    user_id = Column(Integer, ForeignKey('users.id'))  
+    sitename = Column(String, index=True, nullable=False)
+    site_location = Column(String, nullable=False)
+    site_type = Column(String, nullable=False)
+    
+    # Foreign key to link with user
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    
+    # Relationship with Quotation
     quotations = relationship("Quotation", back_populates="site")
+    
+    # Relationship with User
     user = relationship("User", back_populates="sites")
 
+    
 # Create the Product table model
 class Product(Base):
     __tablename__ = 'product'

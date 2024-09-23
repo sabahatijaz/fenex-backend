@@ -1,47 +1,85 @@
-# app/crud/user.py
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from .. import models, auth
 from ..schemas import user_schemas
-
-def create_user(db: Session, user: user_schemas.UserCreate):
-    db_user = db.query(models.User).filter(models.User.email == user.email).first()
-    if db_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    
-    hashed_password = auth.get_password_hash(user.password)
-    new_user = models.User(
-        username=user.username, 
-        email=user.email, 
-        hashed_password=hashed_password
-    )
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return new_user
-
-def get_users(db: Session, skip: int = 0, limit: int = 10):
-    return db.query(models.User).offset(skip).limit(limit).all()
+from ..utils.auth import verify_password
+from sqlalchemy.exc import NoResultFound
+from app.schemas import common
+from app.database import Database  # Import the Database singleton
+from sqlalchemy.future import select 
 
 
-def get_user(db: Session, user_id: int):
-    return db.query(models.User).filter(models.User.id == user_id).first()
+# Initialize the Database instance
+db_instance = Database()
 
+# Helper function to get user by email
+async def get_user_by_email(db: Session, email: str):
+    stmt=select(models.User).filter(models.User.email == email)
+    result = await db.execute(stmt)
+    db_user = result.scalars().first()
+    return db_user
 
-def delete_user(db: Session, user_id: int):
-    user = db.query(models.User).filter(models.User.id == user_id).first()
-    if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    db.delete(user)
-    db.commit()
-    return user
+# Create user
+async def create_user(user: user_schemas.UserCreate):
+    async with db_instance.async_session() as session:
+        db_user = await get_user_by_email(session, user.email)
+        if db_user:
+            raise HTTPException(status_code=400, detail="Email already registered")
+        
+        hashed_password = auth.get_password_hash(user.password)
+        new_user = models.User(
+            username=user.username, 
+            email=user.email, 
+            hashed_password=hashed_password
+        )
+        session.add(new_user)
+        await session.commit()
+        await session.refresh(new_user)
+        return new_user
 
+# Get all users with pagination
+async def get_users(current_user,skip: int = 0, limit: int = 10):
+    async with db_instance.async_session() as session:
+        result = await session.execute(
+            select(models.User).offset(skip).limit(limit)
+        )
+        return result.scalars().all()
 
-# for get quotaions by user id 
-def get_quotations_by_user_id(db: Session, user_id: int):
-    return (
-        db.query(models.Quotation)
-        .join(models.Site)
-        .filter(models.Site.user_id == user_id)
-        .all()
-    )
+# Get a single user by ID
+async def get_user(current_user,user_id: int):
+    async with db_instance.async_session() as session:
+        user = await session.get(models.User, user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        return user
+
+# Delete user
+async def delete_user(current_user, user_id: int):
+    async with db_instance.async_session() as session:
+        user = await session.get(models.User, user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        await session.delete(user)
+        await session.commit()
+        return common.BasicResponse(success=True)
+
+# Authenticate user function
+async def authenticate_user(email: str, password: str):
+    async with db_instance.async_session() as session:
+        user = await get_user_by_email(session, email)
+        if not user or not verify_password(password, user.hashed_password):
+            return None
+        return user
+
+# Get quotations by user ID
+async def get_quotations_by_user_id(current_user,user_id: int):
+    async with db_instance.async_session() as session:
+        try:
+            result = await session.execute(
+                select(models.Quotation)
+                .join(models.Site)
+                .filter(models.Site.user_id == user_id)
+            )
+            return result.scalars().all()
+        except NoResultFound:
+            raise HTTPException(status_code=404, detail="Quotations not found")

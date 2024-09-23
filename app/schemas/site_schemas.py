@@ -7,16 +7,22 @@ class SiteCreate(BaseModel):
     sitename: str 
     site_location: str
     site_type: Literal['residential', 'commercial']
-    user_id: int 
+    user_id: int  # Added to associate the site with a user
+
     @classmethod
     def as_form(
-          cls,
-          sitename: str = Form(...),
-          site_location: str = Form(...),
-          site_type: Literal['residential', 'commercial'] = Form(...),
-          user_id: int = Form(...)
-        ) -> 'SiteCreate':
-        return cls(sitename=sitename, site_location=site_location, site_type=site_type, user_id=user_id)
+        cls,
+        sitename: str = Form(...),
+        site_location: str = Form(...),
+        site_type: Literal['residential', 'commercial'] = Form(...),
+        user_id: int = Form(...)
+    ) -> 'SiteCreate':
+        return cls(
+            sitename=sitename, 
+            site_location=site_location, 
+            site_type=site_type, 
+            user_id=user_id
+        )
 
 class SiteResponse(BaseModel):
     id: int

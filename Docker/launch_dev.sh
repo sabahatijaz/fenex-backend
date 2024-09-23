@@ -49,6 +49,7 @@ docker run \
   --env-file "$ENV_FILE" \
   --network "$NETWORK_NAME" \
   -p "$PORT:8000" \
+  -v $PWD/../app:/app/app \
   "$IMAGE_NAME" || { echo "Failed to run container"; exit 1; }
 
 echo "Docker container is running interactively with code hot-reloading."
