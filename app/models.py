@@ -1,6 +1,7 @@
 
-from sqlalchemy import Column, Integer, String, Float, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, ARRAY
 from sqlalchemy.orm import declarative_base
+from sqlalchemy.dialects.postgresql import JSONB  # Import JSONB for PostgreSQL support
 
 #from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -23,8 +24,9 @@ class Site(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     sitename = Column(String, index=True, nullable=False)
-    site_location = Column(String, nullable=False)
+    site_location = Column(JSONB, nullable=False)
     site_type = Column(String, nullable=False)
+    risks = Column(ARRAY(String), nullable=True)
     
     # Foreign key to link with user
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
@@ -61,6 +63,8 @@ class Quotation(Base):
     product_id = Column(Integer, ForeignKey('product.id'))
     width = Column(Float)
     height = Column(Float)
+    shape = Column(String, nullable=False)
+    quantity = Column(Integer, nullable=False)
     linear_foot = Column(Float) 
     square_foot = Column(Float)
     # Relationships

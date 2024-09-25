@@ -3,6 +3,10 @@ from pydantic import BaseModel, EmailStr,ConfigDict
 from typing import Optional
 
 
+class SignInRequest(BaseModel):
+    username: str
+    password: str
+
 # Pydantic model for user creation
 class UserCreate(BaseModel):
     username: str

@@ -44,15 +44,29 @@ async def seed_products(db):
 async def seed_sites(db):
     """Seed initial sites."""
     site1 = Site(
-        sitename="Site A",
-        site_location="Location A",
-        site_type="residential",
+        sitename="Greenfield Residential Complex",
+        site_location={
+            "street": "123 Main St",
+            "city": "Springfield",
+            "state": "IL",
+            "country": "USA",
+            "postal_code": "62701",
+        },
+        site_type="Residential",
+        risks=["Fire", "Flood"],
         user_id=1  # Ensure this user_id exists
     )
     site2 = Site(
-        sitename="Site B",
-        site_location="Location B",
-        site_type="commercial",
+        sitename="Lakeside Commercial Plaza",
+        site_location={
+            "street": "456 Lakeshore Dr",
+            "city": "Lakeside",
+            "state": "IL",
+            "country": "USA",
+            "postal_code": "62702",
+        },
+        site_type="Commercial",
+        risks=["Earthquake"],
         user_id=2  # Ensure this user_id exists
     )
     async with db.async_session() as session:
@@ -67,13 +81,17 @@ async def seed_quotations(db):
         site_id=1,  # Ensure this site_id exists
         product_id=1,  # Ensure this product_id exists
         width=120.0,
-        height=80.0
+        height=80.0,
+        shape="A-Flat",
+        quantity=2
     )
     quotation2 = Quotation(
         site_id=2,
         product_id=2,
         width=150.0,
-        height=100.0
+        height=100.0,
+        shape="B-Shape",
+        quantity=1
     )
     async with db.async_session() as session:
         session.add_all([quotation1, quotation2])

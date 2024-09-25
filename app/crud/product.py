@@ -8,7 +8,7 @@ from sqlalchemy.future import select
 # Initialize the Database instance
 db_instance = Database()
 
-async def create_product(product: product_schemas.ProductCreate):
+async def create_product(current_user,product: product_schemas.ProductCreate):
     async with db_instance.async_session() as session:
         new_product = models.Product(
             product_name=product.product_name,
@@ -29,12 +29,12 @@ async def create_product(product: product_schemas.ProductCreate):
         await session.refresh(new_product)
         return new_product
 
-async def get_products(skip: int = 0, limit: int = 10):
+async def get_products(current_user,skip: int = 0, limit: int = 10):
     async with db_instance.async_session() as session:
         result = await session.execute(select(models.Product).offset(skip).limit(limit))
         return result.scalars().all()
 
-async def get_product(product_id: int):
+async def get_product(current_user,product_id: int):
     async with db_instance.async_session() as session:
         result = await session.execute(select(models.Product).filter(models.Product.id == product_id))
         product = result.scalars().first()
@@ -42,7 +42,7 @@ async def get_product(product_id: int):
             raise HTTPException(status_code=404, detail="Product not found")
         return product
 
-async def delete_product(product_id: int):
+async def delete_product(current_user,product_id: int):
     async with db_instance.async_session() as session:
         result = await session.execute(select(models.Product).filter(models.Product.id == product_id))
         product = result.scalars().first()

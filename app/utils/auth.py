@@ -50,11 +50,13 @@ def verify_token(token: str, credentials_exception) -> TokenData:
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/signin")
 
 async def get_current_user(token: str = Depends(oauth2_scheme)):
+    print("token", token)
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    print(token)
     token_data = verify_token(token, credentials_exception)
     print(token_data.username)
     async with db_instance.async_session() as session:

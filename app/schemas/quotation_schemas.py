@@ -1,5 +1,6 @@
 
 from pydantic import BaseModel, ConfigDict
+from app.schemas.product_schemas import ProductResponse
 from typing import Optional
 from fastapi import Form
 class QuotationCreate(BaseModel):
@@ -7,6 +8,8 @@ class QuotationCreate(BaseModel):
     product_id: int
     width: float
     height: float
+    shape: str
+    quantity: int
     linear_foot: Optional[float] = None
     square_foot: Optional[float] = None
     @classmethod
@@ -16,6 +19,8 @@ class QuotationCreate(BaseModel):
           product_id: int = Form(...),
           width: float = Form(...),
           height: float = Form(...),
+          quantity: int = Form(...),
+          shape: str = Form(...),
         ) -> 'QuotationCreate':
         linear_foot = ((width + height) * 2) / 12  
         square_foot = (width * height) / 144  
@@ -23,12 +28,16 @@ class QuotationCreate(BaseModel):
         product_id=product_id,
         width=width,
         height=height,
+        quantity=quantity,
+        shape=shape,
         linear_foot=linear_foot,
         square_foot=square_foot)
 
 class QuotationUpdate(BaseModel):
     width: Optional[float] = None
     height: Optional[float] = None
+    shape: str
+    quantity: int
     calculation: Optional[float] = None   # Optional field for updates
     quote_number: Optional[str] = None
     client_name: Optional[str] = None
@@ -39,11 +48,15 @@ class QuotationUpdate(BaseModel):
           cls,
           width: Optional[float] = Form(None),
           height: Optional[float] = Form(None),
+          quantity: int = Form(None),
           quote_number: Optional[str] = Form(None),
           client_name: Optional[str] = Form(None),
+          shape: str = Form(None),
         ) -> 'QuotationUpdate': 
         return cls(width=width,
         height=height,
+        shape=shape,
+        quantity=quantity,
         quote_number=quote_number,
         client_name=client_name)
 
@@ -54,8 +67,11 @@ class QuotationResponse(BaseModel):
     product_id: int
     width: float
     height: float
+    shape: str
+    quantity: int
     linear_foot: Optional[float] = None
     square_foot: Optional[float] = None
+    product: ProductResponse
 
     class Config(ConfigDict):
         from_attributes = True
