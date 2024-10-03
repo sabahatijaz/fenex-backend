@@ -184,3 +184,34 @@ async def get_quotations_by_site(site_id: int, current_user: str = Depends(get_c
     if not quotations:
         raise HTTPException(status_code=404, detail="No quotations found for this site")
     return quotations
+
+
+@app.get("/shapes", response_model=List[str], tags=["Shapes"])
+async def get_shapes(current_user: str = Depends(get_current_user)):
+    shapes = [
+                "UE SIDED TRAPEZOID",
+                "TRIANGLE",
+                "HALF-CIRCLE",
+                "EYEBROW",
+                "HALF EYEBROW",
+                "HALF ELLIPTICAL",
+                "TRAPEZOID",
+                "PENTAGON",
+                "OVAL",
+                "ELIPTICAL",
+                "ARCH",
+                "GOTHIC",
+                "QUARTER SEGMENT",
+                "QUARTER CIRCLE",
+                "FULL CIRCLE",
+                "OCTAGON",
+                "HALF ARCH",
+                "WAVE SHAPE",
+                "EXTENDED FULL ELLIPSE",
+                "EQUAL LEG TRIANGLE",
+                "FAN",
+                "HEXAGON",
+                "HOTDOG",
+                "HALF FAN"
+            ]
+    return shapes

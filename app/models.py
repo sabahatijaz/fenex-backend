@@ -64,6 +64,8 @@ class Quotation(Base):
     width = Column(Float)
     height = Column(Float)
     shape = Column(String, nullable=False)
+    custom_shape = Column(String, nullable=True)
+    radius = Column(Integer, nullable=True)
     quantity = Column(Integer, nullable=False)
     linear_foot = Column(Float) 
     square_foot = Column(Float)

@@ -82,7 +82,9 @@ async def seed_quotations(db):
         product_id=1,  # Ensure this product_id exists
         width=120.0,
         height=80.0,
-        shape="A-Flat",
+        shape="Flat",
+        custom_shape=None,
+        radius=None,
         quantity=2
     )
     quotation2 = Quotation(
@@ -90,7 +92,9 @@ async def seed_quotations(db):
         product_id=2,
         width=150.0,
         height=100.0,
-        shape="B-Shape",
+        shape="Shape",
+        custom_shape="Circle",
+        radius=60,
         quantity=1
     )
     async with db.async_session() as session:

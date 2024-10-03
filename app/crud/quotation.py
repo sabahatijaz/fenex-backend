@@ -37,12 +37,19 @@ async def create_quotation(current_user, quotation: quotation_schemas.QuotationC
                                                     setting_block_price=product_details.setting_block_price,
                                                     install_glass_price=product_details.install_glass_price,
                                                     fix_cost_price=product_details.fix_cost_price)
-
+        radius=db_quotation.radius
+        custom_shape=db_quotation.custom_shape
+        if not radius:
+            radius=0
+        if not custom_shape:
+            custom_shape=""
         quotation=quotation_schemas.QuotationResponse(id=db_quotation.id,site_id=db_quotation.site_id,
                                                         product_id=db_quotation.product_id,
                                                         width=db_quotation.width,
                                                         height=db_quotation.height,
                                                         shape=db_quotation.shape,
+                                                        custom_shape=custom_shape,
+                                                        radius=radius,
                                                         quantity=db_quotation.quantity,
                                                         linear_foot=db_quotation.linear_foot,
                                                         square_foot=db_quotation.square_foot,
@@ -71,12 +78,19 @@ async def get_quotations(current_user, skip: int = 0, limit: int = 10):
                                                         setting_block_price=product_details.setting_block_price,
                                                         install_glass_price=product_details.install_glass_price,
                                                         fix_cost_price=product_details.fix_cost_price)
-
+                radius=quote.radius
+                custom_shape=quote.custom_shape
+                if not radius:
+                    radius=0
+                if not custom_shape:
+                    custom_shape=""
                 res_quotes.append(quotation_schemas.QuotationResponse(id=quote.id,site_id=quote.site_id,
                                                             product_id=quote.product_id,
                                                             width=quote.width,
                                                             height=quote.height,
                                                             shape=quote.shape,
+                                                            custom_shape=custom_shape,
+                                                            radius=radius,
                                                             quantity=quote.quantity,
                                                             linear_foot=quote.linear_foot,
                                                             square_foot=quote.square_foot,
@@ -106,11 +120,20 @@ async def get_quotation(current_user, quotation_id: int):
                                                         install_glass_price=product_details.install_glass_price,
                                                         fix_cost_price=product_details.fix_cost_price)
 
+            radius=quote.radius
+            custom_shape=quote.custom_shape
+            if not radius:
+                radius=0
+            if not custom_shape:
+                custom_shape=""
+
             quotation=quotation_schemas.QuotationResponse(id=quote.id,site_id=quote.site_id,
                                                             product_id=quote.product_id,
                                                             width=quote.width,
                                                             height=quote.height,
                                                             shape=quote.shape,
+                                                            custom_shape=custom_shape,
+                                                            radius=radius,
                                                             quantity=quote.quantity,
                                                             linear_foot=quote.linear_foot,
                                                             square_foot=quote.square_foot,
