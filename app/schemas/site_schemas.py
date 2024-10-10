@@ -83,7 +83,7 @@ class SiteUpdate(BaseModel):
         address = Address(street=street, city=city, state=state, country=country, postal_code=postal_code)
         return cls(
             site_id=site_id,
-            sitename=sitename,
+            sitename=name,
             site_location=address,
             site_type=site_type,
             risks=risks,

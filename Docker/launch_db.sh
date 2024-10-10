@@ -10,7 +10,7 @@ DATA_VOLUME="fenex_data_propto"
 ENV_FILE="../.env"
 NETWORK_NAME="host"
 POSTGRES_PASSWORD="datapassword" # Set your desired superuser password here
-HOST_PORT=5433  # Port on the host
+HOST_PORT=5432  # Port on the host
 NEW_CONTAINER_PORT=5433 # Port in the container after modifying postgresql.conf
 
 # Ensure .env file exists
@@ -41,7 +41,6 @@ fi
 echo "Running Docker container: $CONTAINER_NAME..."
 docker run --restart=unless-stopped -d \
   --name "$CONTAINER_NAME" \
-  --network "$NETWORK_NAME" \
   --env-file "$ENV_FILE" \
   -e POSTGRES_PASSWORD="$POSTGRES_PASSWORD" \
   -e PGPORT="$NEW_CONTAINER_PORT" \
@@ -58,4 +57,3 @@ echo "Verifying PostgreSQL port in the container..."
 docker exec -it "$CONTAINER_NAME" cat /var/lib/postgresql/data/postgresql.conf | grep port
 
 echo "PostgreSQL is running with port $NEW_CONTAINER_PORT."
-
