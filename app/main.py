@@ -1,14 +1,14 @@
 # app/main.py
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException,status
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer, HTTPBearer
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List,Union,Dict
 from app.utils.auth import create_access_token, get_current_user
 from app.schemas import user_schemas, site_schemas, product_schemas, quotation_schemas, common
 from app.crud import user as user_crud, site as site_crud, quotation as quotation_crud, product as product_crud
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import timedelta
-
+import pandas as pd
 # Initialize FastAPI app instance
 app = FastAPI()
 app.add_middleware(
@@ -18,6 +18,43 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+df = pd.read_csv('pivot_table.csv')
+
+@app.get("/possible-widths/", response_model=List[int])
+async def get_possible_widths() -> List[int]:
+    return df["WIDTH"].unique().tolist()
+
+@app.get("/possible-lengths/", response_model=List[int])
+async def get_possible_lengths() -> List[int]:
+    return df["LENGTH"].unique().tolist()
+
+@app.get("/width-by-length/{length}", response_model=Union[List[int], str])
+async def get_width_by_length(length: int) -> Union[List[int], str]:
+    widths = df[df["LENGTH"] == length]["WIDTH"].tolist()
+    if not widths:
+        raise HTTPException(status_code=404, detail="No widths found for the given length.")
+    return widths
+
+@app.get("/length-by-width/{width}", response_model=Union[List[int], str])
+async def get_length_by_width(width: int) -> Union[List[int], str]:
+    lengths = df[df["WIDTH"] == width]["LENGTH"].tolist()
+    if not lengths:
+        raise HTTPException(status_code=404, detail="No lengths found for the given width.")
+    return lengths
+
+@app.get("/pressures-by-length-and-width/{length}/{width}", response_model=Union[Dict[str, List[int]], str])
+async def get_pressures_by_length_and_width(length: int, width: int) -> Union[Dict[str, List[int]], str]:
+    positive_pressures = df[(df["LENGTH"] == length) & (df["WIDTH"] == width)]["POSITIVE_PRESSURE"].tolist()
+    negative_pressures = df[(df["LENGTH"] == length) & (df["WIDTH"] == width)]["NEGATIVE_PRESSURE"].tolist()
+    
+    if not positive_pressures and not negative_pressures:
+        raise HTTPException(status_code=404, detail="No pressures found for the given length and width.")
+    
+    return {
+        "positive_pressures": positive_pressures,
+        "negative_pressures": negative_pressures
+    }
 
 
 # User Endpoints
