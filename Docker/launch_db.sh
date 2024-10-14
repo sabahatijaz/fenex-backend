@@ -11,7 +11,7 @@ ENV_FILE="../.env"
 NETWORK_NAME="host"
 POSTGRES_PASSWORD="datapassword" # Set your desired superuser password here
 HOST_PORT=5432  # Port on the host
-NEW_CONTAINER_PORT=5433 # Port in the container after modifying postgresql.conf
+NEW_CONTAINER_PORT=5432 # Port in the container after modifying postgresql.conf
 
 # Ensure .env file exists
 if [ ! -f "$ENV_FILE" ]; then

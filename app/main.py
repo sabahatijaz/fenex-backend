@@ -19,6 +19,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# use csv_file for data
 df = pd.read_csv('pivot_table.csv')
 
 @app.get("/possible-widths/", response_model=List[int])
