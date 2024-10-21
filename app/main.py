@@ -2,15 +2,19 @@
 from fastapi import FastAPI, Depends, HTTPException,status
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer, HTTPBearer
 from sqlalchemy.orm import Session
-from typing import List,Union,Dict
+from typing import List,Union,Dict,Optional
 from app.utils.auth import create_access_token, get_current_user
 from app.schemas import user_schemas, site_schemas, product_schemas, quotation_schemas, common
 from app.crud import user as user_crud, site as site_crud, quotation as quotation_crud, product as product_crud
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import timedelta
+from app.models import Dimensions
+from app.database import Database 
+from sqlalchemy.future import select 
 import pandas as pd
 # Initialize FastAPI app instance
 app = FastAPI()
+db_instance = Database()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],  # Your React app URL
@@ -19,36 +23,75 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# use csv_file for data
-df = pd.read_csv('pivot_table.csv')
 
-@app.get("/possible-widths/", response_model=List[int])
-async def get_possible_widths() -> List[int]:
-    return df["WIDTH"].unique().tolist()
+@app.get("/possible-lengths/", response_model=List[float])
+async def get_possible_lengths(product_id: Optional[int] = None) -> List[float]:
+    async with db_instance.async_session() as session:
+        lengths = await session.execute(
+            select(Dimensions.height)
+            .filter(Dimensions.product_id == product_id)
+            .distinct()
+        )
+        lengths = lengths.scalars().all()  
+        
+    if not lengths:
+        raise HTTPException(status_code=404, detail="No lengths found for the given product_id.")
+        
+    return lengths  
 
-@app.get("/possible-lengths/", response_model=List[int])
-async def get_possible_lengths() -> List[int]:
-    return df["LENGTH"].unique().tolist()
-
-@app.get("/width-by-length/{length}", response_model=Union[List[int], str])
-async def get_width_by_length(length: int) -> Union[List[int], str]:
-    widths = df[df["LENGTH"] == length]["WIDTH"].tolist()
+@app.get("/width-by-length/{length}", response_model=Union[List[float], str])
+async def get_width_by_length(product_id: Optional[int] = None,length: float=None) -> Union[List[float], str]:
+    async with db_instance.async_session() as session:
+        widths = await session.execute(
+            select(Dimensions.width)
+            .filter(
+                Dimensions.product_id == product_id,
+                Dimensions.height == length
+            )
+        )
+        widths = widths.scalars().all()  
+        
     if not widths:
-        raise HTTPException(status_code=404, detail="No widths found for the given length.")
-    return widths
+        raise HTTPException(status_code=404, detail="No widths found for the given length and product_id.")
+    
+    return widths  
+
 
 @app.get("/length-by-width/{width}", response_model=Union[List[int], str])
 async def get_length_by_width(width: int) -> Union[List[int], str]:
-    lengths = df[df["WIDTH"] == width]["LENGTH"].tolist()
+    async with db_instance.async_session() as session:
+        lengths = await session.execute(
+            select(Dimensions.height)
+            .filter(Dimensions.width == width)
+        )
+        lengths = lengths.scalars().all()  
+        
     if not lengths:
         raise HTTPException(status_code=404, detail="No lengths found for the given width.")
-    return lengths
+    
+    return lengths  
 
 @app.get("/pressures-by-length-and-width/{length}/{width}", response_model=Union[Dict[str, List[int]], str])
 async def get_pressures_by_length_and_width(length: int, width: int) -> Union[Dict[str, List[int]], str]:
-    positive_pressures = df[(df["LENGTH"] == length) & (df["WIDTH"] == width)]["POSITIVE_PRESSURE"].tolist()
-    negative_pressures = df[(df["LENGTH"] == length) & (df["WIDTH"] == width)]["NEGATIVE_PRESSURE"].tolist()
-    
+    async with db_instance.async_session() as session:
+        positive_pressures = await session.execute(
+            select(Dimensions.positive_pressure)
+            .filter(
+                Dimensions.height == length,
+                Dimensions.width == width
+            )
+        )
+        negative_pressures = await session.execute(
+            select(Dimensions.negative_pressure)
+            .filter(
+                Dimensions.height == length,
+                Dimensions.width == width
+            )
+        )
+        
+        positive_pressures = positive_pressures.scalars().all()  
+        negative_pressures = negative_pressures.scalars().all() 
+
     if not positive_pressures and not negative_pressures:
         raise HTTPException(status_code=404, detail="No pressures found for the given length and width.")
     
@@ -56,7 +99,6 @@ async def get_pressures_by_length_and_width(length: int, width: int) -> Union[Di
         "positive_pressures": positive_pressures,
         "negative_pressures": negative_pressures
     }
-
 
 # User Endpoints
 @app.post("/users/", response_model=user_schemas.UserResponse,tags=["Users"])

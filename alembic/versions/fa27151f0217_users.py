@@ -77,6 +77,18 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_quotation_id'), 'quotation', ['id'], unique=False)
     # ### end Alembic commands ###
+    # Create dimensions table
+    op.create_table('pivot_table',
+    sa.Column('id', sa.Integer(), primary_key=True),
+    sa.Column('length', sa.Integer(), nullable=False),
+    sa.Column('width', sa.Integer(), nullable=False),
+    sa.Column('psf1', sa.Integer(), nullable=False),
+    sa.Column('psf2', sa.Integer(), nullable=False),
+    sa.Column('product_id', sa.Integer(), nullable=False),  # Add product_id column
+    sa.ForeignKeyConstraint(['product_id'], ['product.id'], )  # Add foreign key constraint
+    )
+    
+
 
 
 def downgrade() -> None:
@@ -94,3 +106,5 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_product_id'), table_name='product')
     op.drop_table('product')
     # ### end Alembic commands ###
+    op.drop_table('pivot_table')
+

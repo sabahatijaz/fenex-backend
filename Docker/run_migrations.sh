@@ -5,7 +5,7 @@ set -e
 
 # Variables
 CONTAINER_NAME="fenex-fastapi-postgres"  # Change to your actual container name
-APP_DIR=" ../app"  # Adjust the path if your app directory differs
+APP_DIR=" /app "  # Adjust the path if your app directory differs
 
 # Function to run Alembic commands inside the Docker container interactively
 run_migrations() {

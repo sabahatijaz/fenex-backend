@@ -1,5 +1,5 @@
 
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, ARRAY
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, ARRAY,Numeric
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.dialects.postgresql import JSONB  # Import JSONB for PostgreSQL support
 
@@ -73,3 +73,17 @@ class Quotation(Base):
     site = relationship("Site", back_populates="quotations")
     product = relationship("Product")
 
+class Dimensions(Base):
+    __tablename__ = 'pivot_table'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    width = Column(Numeric, nullable=False)
+    height = Column(Numeric, nullable=False)
+    positive_pressure = Column(Numeric, nullable=False)
+    negative_pressure = Column(Numeric, nullable=False)
+    product_id = Column(Integer, ForeignKey('product.id'), nullable=False)
+
+    product = relationship("Product", back_populates="pivot_table")
+
+# Adding back reference to the Product model
+Product.pivot_table = relationship("Dimensions", order_by=Dimensions.id, back_populates="product")

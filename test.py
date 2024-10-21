@@ -100,16 +100,16 @@ async def seed_dummy_products(db: Database):
         ),
          Product(
             product_name="Flood_wall",
-            glass_general_price=0.0,
-            shipping_glass_supplier_price=0.0,
-            aluminum_frame_price=0.0,
+            glass_general_price=30.0,
+            shipping_glass_supplier_price=8.0,
+            aluminum_frame_price=35.0,
             stainless_steel_price=0.0,
             local_shipping_price=0.0,
-            paint_al_frame_price=0.0,
-            cut_assemble_frame_price=0.0,
-            setting_block_price=0.0,
-            install_glass_price=0.0,
-            fix_cost_price=0.0
+            paint_al_frame_price=12.0,
+            cut_assemble_frame_price=20.0,
+            setting_block_price=6.0,
+            install_glass_price=12.0,
+            fix_cost_price=55.0
         ),
         Product(
             product_name="Fire_window",
