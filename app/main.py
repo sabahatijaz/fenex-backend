@@ -24,7 +24,7 @@ app.add_middleware(
 )
 
 
-@app.get("/possible-lengths/", response_model=List[float])
+@app.get("/possible-lengths/{product_id}", response_model=List[float])
 async def get_possible_lengths(product_id: Optional[int] = None) -> List[float]:
     async with db_instance.async_session() as session:
         lengths = await session.execute(
@@ -39,7 +39,7 @@ async def get_possible_lengths(product_id: Optional[int] = None) -> List[float]:
         
     return lengths  
 
-@app.get("/width-by-length/{length}", response_model=Union[List[float], str])
+@app.get("/width-by-length/{product_id}/{length}", response_model=Union[List[float], str])
 async def get_width_by_length(product_id: Optional[int] = None,length: float=None) -> Union[List[float], str]:
     async with db_instance.async_session() as session:
         widths = await session.execute(

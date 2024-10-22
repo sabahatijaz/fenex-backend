@@ -80,10 +80,10 @@ def upgrade() -> None:
     # Create dimensions table
     op.create_table('pivot_table',
     sa.Column('id', sa.Integer(), primary_key=True),
-    sa.Column('length', sa.Integer(), nullable=False),
     sa.Column('width', sa.Integer(), nullable=False),
-    sa.Column('psf1', sa.Integer(), nullable=False),
-    sa.Column('psf2', sa.Integer(), nullable=False),
+    sa.Column('height', sa.Integer(), nullable=False),
+    sa.Column('positive_pressure', sa.Integer(), nullable=False),
+    sa.Column('negative_pressure', sa.Integer(), nullable=False),
     sa.Column('product_id', sa.Integer(), nullable=False),  # Add product_id column
     sa.ForeignKeyConstraint(['product_id'], ['product.id'], )  # Add foreign key constraint
     )

@@ -246,8 +246,8 @@ async def seed_dummy_sites(db: Database):
                "country": "USA",
                "postal_code": "62701",
             },
-            site_type="Residential",
-            risks=["Fire", "Flood"],
+          site_type="Residential",
+          risks=["Fire", "Flood"],
         ),
        Site(
           sitename="Oakwood Commercial Building",
@@ -258,8 +258,8 @@ async def seed_dummy_sites(db: Database):
               "country": "USA",
               "postal_code": "60611",
            },
-           site_type="Commercial",
-           risks=["Fire", "Flood"],
+          site_type="Commercial",
+          risks=["Fire", "Flood"],
           
         ),
        Site(
@@ -271,8 +271,8 @@ async def seed_dummy_sites(db: Database):
              "country": "USA",
              "postal_code": "61614",
             },
-            site_type="Industrial",
-            risks=["Fire", "Environmental"],
+          site_type="Industrial",
+          risks=["Fire", "Environmental"],
             
        ),
        Site(
@@ -284,8 +284,8 @@ async def seed_dummy_sites(db: Database):
               "country": "USA",
               "postal_code": "60563",
             },
-            site_type="Residential",
-            risks=["Fire", "Flood"],
+          site_type="Residential",
+          risks=["Fire", "Flood"],
              
         ),
         Site(
@@ -297,8 +297,8 @@ async def seed_dummy_sites(db: Database):
              "country": "USA",
              "postal_code": "61101",
             },
-            site_type="Commercial",
-            risks=["Fire", "Earthquake"],
+          site_type="Commercial",
+          risks=["Fire", "Earthquake"],
         ),
     ]
     async with db.async_session() as session:
