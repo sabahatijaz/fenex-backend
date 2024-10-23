@@ -1,0 +1,1 @@
+docker run --restart=unless-stopped -d --name fenex-fastapi-redis --network host redis 

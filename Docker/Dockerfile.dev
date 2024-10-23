@@ -1,0 +1,25 @@
+# Use the official Python 3.9 image as the base image
+FROM python:3.9
+
+# Install PostgreSQL client
+RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
+
+# Set the working directory
+WORKDIR /src
+
+# Copy the requirements file into the container
+COPY requirements.txt /requirements.txt
+
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade -r /requirements.txt
+
+# Install development tools
+RUN pip install ipython python-dotenv
+
+WORKDIR /src
+
+# Expose the port the app runs on
+EXPOSE 8150
+
+# Command to run the application
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--reload"]

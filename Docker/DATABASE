@@ -1,0 +1,30 @@
+docker exec -it fenex-fastapi-postgres bash
+su postgres
+
+psql -c "CREATE ROLE fenex LOGIN PASSWORD 'fenex';"
+
+psql -c "CREATE DATABASE fastapi;"
+psql -c "GRANT ALL PRIVILEGES ON DATABASE fastapi TO fenex;"
+psql -d fastapi -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO fenex;"
+
+psql
+
+-- Connect to the 'propto' database
+\c fastapi
+
+-- Grant usage and create privileges on the schema 'public'
+GRANT USAGE, CREATE ON SCHEMA public TO fenex;
+
+-- Grant all privileges on all tables in the schema 'public'
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO fenex;
+
+-- Grant privileges on all sequences in the schema 'public'
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO fenex;
+
+-- Set default privileges for new tables and sequences
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO fenex;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON SEQUENCES TO fenex;
+
+
+<MAKE MIGRATIONS>
+

@@ -1,0 +1,1 @@
+docker run --restart=unless-stopped -d --name fenex-fastapi-postgres --network host --env-file ../.env -v postgres_data_fenex:/var/lib/postgresql/data postgres:latest
