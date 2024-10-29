@@ -1,5 +1,5 @@
 # app/main.py
-from fastapi import FastAPI, Depends, HTTPException,status
+from fastapi import FastAPI, Depends, HTTPException,status,Query
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer, HTTPBearer
 from sqlalchemy.orm import Session
 from typing import List,Union,Dict,Optional
@@ -7,25 +7,25 @@ from app.utils.auth import create_access_token, get_current_user
 from app.schemas import user_schemas, site_schemas, product_schemas, quotation_schemas, common
 from app.crud import user as user_crud, site as site_crud, quotation as quotation_crud, product as product_crud
 from fastapi.middleware.cors import CORSMiddleware
-from datetime import timedelta
-from app.models import Dimensions
+from datetime import timedelta 
+from app.models import Dimensions,Product
 from app.database import Database 
 from sqlalchemy.future import select 
-import pandas as pd
+import httpx
+from fastapi import Body
 # Initialize FastAPI app instance
 app = FastAPI()
 db_instance = Database()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Your React app URL
+    allow_origins=["http://localhost:3000", "http://localhost:8000"],  # Your React app URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
-@app.get("/possible-lengths/{product_id}", response_model=List[float])
-async def get_possible_lengths(product_id: Optional[int] = None) -> List[float]:
+@app.get("/possible-lengths/{product_id}", response_model=List[float],tags=["Dimensions"])
+async def get_possible_lengths(product_id: Optional[int] = None,current_user: str = Depends(get_current_user)) -> List[float]:
     async with db_instance.async_session() as session:
         lengths = await session.execute(
             select(Dimensions.height)
@@ -39,8 +39,8 @@ async def get_possible_lengths(product_id: Optional[int] = None) -> List[float]:
         
     return lengths  
 
-@app.get("/width-by-length/{product_id}/{length}", response_model=Union[List[float], str])
-async def get_width_by_length(product_id: Optional[int] = None,length: float=None) -> Union[List[float], str]:
+@app.get("/width-by-length/{product_id}/{length}", response_model=Union[List[float], str],tags=["Dimensions"])
+async def get_width_by_length(product_id: Optional[int] = None,length: float=None,current_user: str = Depends(get_current_user)) -> Union[List[float], str]:
     async with db_instance.async_session() as session:
         widths = await session.execute(
             select(Dimensions.width)
@@ -57,7 +57,7 @@ async def get_width_by_length(product_id: Optional[int] = None,length: float=Non
     return widths  
 
 
-@app.get("/length-by-width/{width}", response_model=Union[List[int], str])
+@app.get("/length-by-width/{width}", response_model=Union[List[int], str],tags=["Dimensions"])
 async def get_length_by_width(width: int) -> Union[List[int], str]:
     async with db_instance.async_session() as session:
         lengths = await session.execute(
@@ -71,7 +71,7 @@ async def get_length_by_width(width: int) -> Union[List[int], str]:
     
     return lengths  
 
-@app.get("/pressures-by-length-and-width/{length}/{width}", response_model=Union[Dict[str, List[int]], str])
+@app.get("/pressures-by-length-and-width/{length}/{width}", response_model=Union[Dict[str, List[int]], str],tags=["Dimensions"])
 async def get_pressures_by_length_and_width(length: int, width: int) -> Union[Dict[str, List[int]], str]:
     async with db_instance.async_session() as session:
         positive_pressures = await session.execute(
@@ -295,3 +295,47 @@ async def get_shapes(current_user: str = Depends(get_current_user)):
                 "HALF FAN"
             ]
     return shapes
+
+
+@app.post("/quotations/site/{site_id}", response_model=List[quotation_schemas.QuotationResponse], tags=["Quotations"])
+async def create_quotations_for_site(
+    site_id: int,
+    quotations: List[quotation_schemas.QuotationCreate],
+    current_user: str = Depends(get_current_user),):
+    added_quotations = await quotation_crud.add_quotations_for_site(site_id, quotations)
+    return added_quotations
+
+
+@app.get("/disaster-alerts/{latitude}/{longitude}",tags=["Sites"])
+async def get_disaster_alerts(latitude: float, longitude: float, current_user: str = Depends(get_current_user)):
+    try:
+        state, alerts = await site_crud.fetch_disaster_alerts(latitude, longitude)
+        return {
+            "state": state,
+            "alerts": alerts
+        }
+        
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=e.response.status_code, detail="Error fetching data from Weather.gov API")
+    except KeyError:
+        raise HTTPException(status_code=500, detail="Unexpected response structure from Weather.gov API")
+
+
+
+@app.get("/products/", response_model=List[product_schemas.ProductResponse])
+async def get_products(
+    product_names: List[str] = Query(...),
+    current_user: str = Depends(get_current_user)) -> List[product_schemas.ProductResponse]:
+    async with db_instance.async_session() as session:
+        result = await session.execute(select(Product).where(Product.product_name.in_(product_names)))
+        products = result.scalars().all()
+        products_list = [
+            product_schemas.ProductResponse(id=product.id, product_name=product.product_name)
+            for product in products
+        ]
+        not_found = set(product_names) - {product.product_name for product in products}
+        if not_found:
+            raise HTTPException(status_code=404, detail=f"Products not found: {', '.join(not_found)}")
+
+        return products_list
+    

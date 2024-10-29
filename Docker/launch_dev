@@ -1,11 +1,11 @@
 set -e
 docker build .. -f Dockerfile.dev -t fenex-fastapi-dev
-docker run \
-    --rm -it \
-    --name fenex-fastapi-dev \
-	--network=host \
-	-v $PWD/../app:/src/app \
-	-v $PWD/../test:/src/test \
-	-v $PWD/../uploads:/uploads \
-	--env-file ../.env \
-    fenex-fastapi-dev 
+docker run --rm -it \
+  --name fenex-fastapi-dev \
+  -p 8000:8000 \
+  -v $PWD/../app:/src/app \
+  -v $PWD/../test:/src/test \
+  -v $PWD/../uploads:/uploads \
+  --env-file ../.env \
+  --network fenex-network \
+  fenex-fastapi-dev

@@ -7,9 +7,12 @@ services:
       POSTGRES_PASSWORD: $DB_PASS
     networks:
       - fenex-network
+    ports:
+      - "5432:5432"
     volumes:
       - fenex_data_propto:/var/lib/postgresql/data
       - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+     
 
   redis:
     image: redis:latest

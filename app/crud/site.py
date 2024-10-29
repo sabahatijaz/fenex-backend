@@ -5,7 +5,7 @@ from app.database import Database
 from .. import models
 from ..schemas import site_schemas, common, product_schemas, quotation_schemas
 from app.crud.product import get_product
-
+import httpx
 # Initialize the Database instance
 db_instance = Database()
 
@@ -68,7 +68,7 @@ async def update_site(current_user, site_id: int, site: site_schemas.SiteUpdate)
         if site.sitename is not None:
             db_site.sitename = site.sitename
         if site.site_location is not None:
-            db_site.site_location = site.site_location
+            db_site.site_location = site.site_location.dict()  # Convert Pydantic model to dict
         if site.site_type is not None:
             db_site.site_type = site.site_type
         if site.user_id is not None:
@@ -121,6 +121,8 @@ async def get_quotations_by_site_id(current_user, site_id: int):
                                                             width=quote.width,
                                                             height=quote.height,
                                                             shape=quote.shape,
+                                                            custom_shape=quote.shape,
+                                                            radius=quote.radius,
                                                             quantity=quote.quantity,
                                                             linear_foot=quote.linear_foot,
                                                             square_foot=quote.square_foot,
@@ -129,3 +131,20 @@ async def get_quotations_by_site_id(current_user, site_id: int):
 
         
         return res_quotes
+
+
+async def fetch_disaster_alerts(latitude: float, longitude: float):
+    async with httpx.AsyncClient() as client:
+        # Get location data
+        response = await client.get(f"https://api.weather.gov/points/{latitude},{longitude}")
+        response.raise_for_status()
+        location_data = response.json()
+
+        state = location_data['properties']['relativeLocation']['properties']['state']
+
+        alerts_response = await client.get(f"https://api.weather.gov/alerts/active?area={state}")
+        alerts_response.raise_for_status()
+        alerts_data = alerts_response.json()
+
+        return state, alerts_data['features']
+    

@@ -7,7 +7,7 @@ from sqlalchemy.exc import NoResultFound
 from app.schemas import common
 from app.database import Database  # Import the Database singleton
 from sqlalchemy.future import select 
-
+from sqlalchemy.orm import joinedload
 
 # Initialize the Database instance
 db_instance = Database()
@@ -72,14 +72,17 @@ async def authenticate_user(email: str, password: str):
         return user
 
 # Get quotations by user ID
-async def get_quotations_by_user_id(current_user,user_id: int):
+async def get_quotations_by_user_id(current_user, user_id: int):
     async with db_instance.async_session() as session:
-        try:
-            result = await session.execute(
-                select(models.Quotation)
-                .join(models.Site)
-                .filter(models.Site.user_id == user_id)
-            )
-            return result.scalars().all()
-        except NoResultFound:
+        result = await session.execute(
+            select(models.Quotation)
+            .join(models.Site)
+            .options(joinedload(models.Quotation.product))  # Eager load related data
+            .filter(models.Site.user_id == user_id)
+        )
+        
+        quotations = result.scalars().all()
+        if not quotations:
             raise HTTPException(status_code=404, detail="Quotations not found")
+        
+        return quotations

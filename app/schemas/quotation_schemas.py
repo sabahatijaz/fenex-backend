@@ -80,8 +80,8 @@ class QuotationResponse(BaseModel):
     width: float
     height: float
     shape: str
-    custom_shape: str
-    radius: int
+    custom_shape: Optional[str] = None  # Make it optional
+    radius: Optional[int] = None  # Make it optional
     quantity: int
     linear_foot: Optional[float] = None
     square_foot: Optional[float] = None

@@ -5,6 +5,8 @@ from .. import models
 from ..schemas import site_schemas, common, product_schemas, quotation_schemas
 from app.crud.product import get_product
 from sqlalchemy.future import select
+from typing import List
+from sqlalchemy.orm import selectinload
 
 # Initialize the Database instance
 db_instance = Database()
@@ -173,3 +175,38 @@ async def delete_quotation(current_user, quotation_id: int):
         await session.delete(quotation)
         await session.commit()
         return quotation
+
+
+async def add_quotations_for_site(
+    site_id: int, quotations: List[quotation_schemas.QuotationCreate]) -> List[models.Quotation]:
+    async with db_instance.async_session() as session:  
+        site_result = await session.execute(select(models.Site).filter(models.Site.id == site_id))
+        site = site_result.scalar_one_or_none()
+        if site is None:
+            raise HTTPException(status_code=404, detail="Site not found")
+        
+        added_quotations = []
+        for quotation in quotations:
+            db_quotation = models.Quotation(
+                site_id=site_id,
+                product_id=quotation.product_id,
+                width=quotation.width,
+                height=quotation.height,
+                shape=quotation.shape,
+                custom_shape=quotation.custom_shape,
+                radius=quotation.radius,
+                quantity=quotation.quantity,
+                linear_foot=quotation.linear_foot,
+                square_foot=quotation.square_foot,
+            )
+            session.add(db_quotation)
+            added_quotations.append(db_quotation)
+
+        await session.commit()
+
+        for quotation in added_quotations:
+            await session.refresh(quotation)
+            await session.execute(select(models.Quotation).options(selectinload(models.Quotation.product)))
+
+        return added_quotations
+    
