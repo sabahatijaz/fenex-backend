@@ -62,6 +62,6 @@ class ProductResponse(BaseModel):
     class Config(ConfigDict):
         from_attributes = True
 
-class ProductResponse(BaseModel):
+class ProductResponse1(BaseModel):
     id: int
     product_name: str

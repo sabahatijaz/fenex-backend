@@ -2,9 +2,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, Depends
 from app.database import Database
 from .. import models
+from sqlalchemy import func
 from ..schemas import product_schemas
 from sqlalchemy.future import select
-
+from typing import List
 # Initialize the Database instance
 db_instance = Database()
 
@@ -51,3 +52,32 @@ async def delete_product(current_user,product_id: int):
         await session.delete(product)
         await session.commit()
         return product
+
+
+async def get_products_by_names(product_names: List[str]) -> List[product_schemas.ProductResponse1]:
+    normalized_names = {name.strip().lower() for name in product_names}
+
+    async with db_instance.async_session() as session:
+        # Execute a case-insensitive query to get products with names matching any in normalized_names
+        result = await session.execute(
+            select(models.Product).where(func.lower(models.Product.product_name).in_(normalized_names))
+        )
+        
+        # Retrieve products from the query
+        products = result.scalars().all()
+
+        # Create a set of product names fetched from the database for easy lookup
+        fetched_product_names = {product.product_name.lower() for product in products}
+
+        # Check if any of the requested product names were not found
+        not_found = normalized_names - fetched_product_names
+        if not_found:
+            raise HTTPException(status_code=404, detail=f"Products not found: {', '.join(not_found)}")
+
+        # Filter the products to include only those exactly matching the requested names
+        filtered_products = [
+            product_schemas.ProductResponse1(id=product.id, product_name=product.product_name)
+            for product in products if product.product_name.lower() in normalized_names
+        ]
+
+        return filtered_products

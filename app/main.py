@@ -1,5 +1,5 @@
 # app/main.py
-from fastapi import FastAPI, Depends, HTTPException,status,Query
+from fastapi import FastAPI, Depends, HTTPException,status,Query,Path
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer, HTTPBearer
 from sqlalchemy.orm import Session
 from typing import List,Union,Dict,Optional
@@ -12,7 +12,6 @@ from app.models import Dimensions,Product
 from app.database import Database 
 from sqlalchemy.future import select 
 import httpx
-from fastapi import Body
 # Initialize FastAPI app instance
 app = FastAPI()
 db_instance = Database()
@@ -320,22 +319,11 @@ async def get_disaster_alerts(latitude: float, longitude: float, current_user: s
     except KeyError:
         raise HTTPException(status_code=500, detail="Unexpected response structure from Weather.gov API")
 
-
-
-@app.get("/products/", response_model=List[product_schemas.ProductResponse])
+@app.get("/products/by-names/{product_names}", response_model=List[product_schemas.ProductResponse1],tags=["Products"])
 async def get_products(
-    product_names: List[str] = Query(...),
-    current_user: str = Depends(get_current_user)) -> List[product_schemas.ProductResponse]:
-    async with db_instance.async_session() as session:
-        result = await session.execute(select(Product).where(Product.product_name.in_(product_names)))
-        products = result.scalars().all()
-        products_list = [
-            product_schemas.ProductResponse(id=product.id, product_name=product.product_name)
-            for product in products
-        ]
-        not_found = set(product_names) - {product.product_name for product in products}
-        if not_found:
-            raise HTTPException(status_code=404, detail=f"Products not found: {', '.join(not_found)}")
-
-        return products_list
-    
+    product_names: str,  
+    current_user: str = Depends(get_current_user)
+) -> List[product_schemas.ProductResponse]:
+    # Split the product names by comma
+    product_names_list = product_names.split(",")
+    return await product_crud.get_products_by_names(product_names_list)
