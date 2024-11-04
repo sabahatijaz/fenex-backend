@@ -1,8 +1,7 @@
 import asyncio
-from app.database import Database
+from database import Database
 from app.models import Product, Quotation, Site
 from sqlalchemy.future import select
-
 # Seed products with dummy data
 async def seed_dummy_products(db: Database):
     """Seed dummy product data."""

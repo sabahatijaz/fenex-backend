@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, declarative_base
 from dotenv import load_dotenv
 from databases import Database as AsyncDatabase
-from . import models
+from app import models
 # Load environment variables from .env
 load_dotenv()
 
