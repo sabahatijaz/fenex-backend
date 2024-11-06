@@ -1,8 +1,39 @@
 import asyncio
 from database import Database
-from app.models import Product, Quotation, Site
+from app.models import Product, Quotation, Site, User
+from app.auth import get_password_hash
 from sqlalchemy.future import select
 # Seed products with dummy data
+
+
+async def seed_dummy_users(db: Database):
+    """Seed initial users."""
+    dummy_users = [
+        User(
+          username="admin",
+          email="admin@example.com",
+          hashed_password=get_password_hash("admin123")),
+        User(
+          username="user1",
+          email="user1@example.com",
+          hashed_password=get_password_hash("user123")),
+        User(
+          username="user2",
+          email="user2@example.com",
+          hashed_password=get_password_hash("user234")),
+        User(
+          username="user3",
+          email="user3@example.com",
+          hashed_password=get_password_hash("user34")),
+        User(
+          username="user4",
+          email="user4@example.com",
+          hashed_password=get_password_hash("user4")),
+    ] 
+    async with db.async_session() as session:
+        session.add_all(dummy_users)
+        await session.commit()
+
 async def seed_dummy_products(db: Database):
     """Seed dummy product data."""
     dummy_products = [
@@ -93,19 +124,19 @@ async def seed_dummy_sites(db: Database):
         Site(sitename="Oakwood Commercial Building",
              site_location={"street": "456 Oakwood Ave", "city": "Chicago", "state": "IL",
                             "country": "USA", "postal_code": "60611"},
-             site_type="Commercial", risks=["Fire", "Flood"], user_id=1),
+             site_type="Commercial", risks=["Fire", "Flood"], user_id=2),
         Site(sitename="Riverview Industrial Park",
              site_location={"street": "789 Riverview Dr", "city": "Peoria", "state": "IL",
                             "country": "USA", "postal_code": "61614"},
-             site_type="Residential", risks=["Fire", "Environmental"], user_id=1),
+             site_type="Residential", risks=["Fire", "Environmental"], user_id=3),
         Site(sitename="Lakeside Condominiums",
              site_location={"street": "901 Lakeside Dr", "city": "Naperville", "state": "IL",
                             "country": "USA", "postal_code": "60563"},
-             site_type="Residential", risks=["Fire", "Flood"], user_id=1),
+             site_type="Residential", risks=["Fire", "Flood"], user_id=4),
         Site(sitename="Downtown Office Building",
              site_location={"street": "1111 Main St", "city": "Rockford", "state": "IL",
                             "country": "USA", "postal_code": "61101"},
-             site_type="Commercial", risks=["Fire", "Earthquake"], user_id=1),
+             site_type="Commercial", risks=["Fire", "Earthquake"], user_id=5),
     ]
     async with db.async_session() as session:
         session.add_all(dummy_sites)
@@ -138,11 +169,17 @@ async def fetch_all_sites(db: Database):
         for site in sites:
             print(site)
 
+async def fetch_all_users(db: Database):
+    async with db.async_session() as session:
+        result = await session.execute(select(Site))
+        users = result.scalars().all()
+        for user in users:
+            print(user)
 
 # Main function to run seeders
 async def main():
     db = Database()
-
+    await seed_dummy_users(db)
     await seed_dummy_products(db)
     await seed_dummy_sites(db)
 
@@ -158,9 +195,11 @@ async def main():
     await seed_dummy_quotations(db, site_ids, product_ids)
 
     # Verify seeding
+    await fetch_all_users(db)
     await fetch_all_products(db)
     await fetch_all_quotations(db)
     await fetch_all_sites(db)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

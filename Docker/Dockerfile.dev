@@ -12,7 +12,9 @@ RUN apt-get update && \
 
 # Set the working directory
 WORKDIR /src
+# Set PYTHONPATH for easier imports
 
+ENV PYTHONPATH=/src
 # Copy the requirements file into the container
 COPY requirements.txt /requirements.txt
 

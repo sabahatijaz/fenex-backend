@@ -13,6 +13,9 @@ RUN apt-get update && apt-get install -y \
 # Set the working directory
 WORKDIR /app
 
+# Set PYTHONPATH for easier imports
+ENV PYTHONPATH=/app
+
 # Copy the requirements file from the parent directory
 COPY ../requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
