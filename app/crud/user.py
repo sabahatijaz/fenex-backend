@@ -30,7 +30,8 @@ async def create_user(user: user_schemas.UserCreate):
         new_user = models.User(
             username=user.username, 
             email=user.email, 
-            hashed_password=hashed_password
+            hashed_password=hashed_password,
+            role=user.role or "user"
         )
         session.add(new_user)
         await session.commit()

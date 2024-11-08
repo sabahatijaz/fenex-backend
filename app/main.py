@@ -126,14 +126,20 @@ async def delete_user(user_id: int, current_user: str = Depends(get_current_user
 # Sign-Up Endpoint
 @app.post("/auth/signup", response_model=user_schemas.UserResponse, tags=["Auth"])
 async def signup(new_user: user_schemas.UserCreate):
-    # Create a new user
-    db_user = await user_crud.create_user( new_user)
+    # Default the role to "user" if not provided in the request
+    if not new_user.role:
+        new_user.role = "user"
+    
+    # Create a new user with the role
+    db_user = await user_crud.create_user(new_user)
     return db_user
+
 
 # Sign-In Endpoint
 @app.post("/auth/signin", response_model=user_schemas.Token, tags=["Auth"])
 async def signin(form_data: OAuth2PasswordRequestForm = Depends()):
-    print("form_data: ",form_data)
+    print("form_data: ", form_data)
+    
     # Authenticate the user
     user = await user_crud.authenticate_user(form_data.username, form_data.password)
     if not user:
@@ -147,10 +153,15 @@ async def signin(form_data: OAuth2PasswordRequestForm = Depends()):
     # Create access token
     access_token_expires = timedelta(minutes=30)  # Token expiration time
     access_token = create_access_token(
-        data={"sub": user.email}, expires_delta=access_token_expires
+        data={"sub": user.email, "role": user.role}, expires_delta=access_token_expires
     )
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user_id": user.id,
+        "role": user.role  # Include the role in the response
+    }
 
 
 # Site Endpoints
@@ -244,9 +255,18 @@ async def update_quotation(quotation_id: int,quotation:quotation_schemas.Quotati
     return db_quotation
 
 
+
+@app.get("/versions/{quotation_id}", response_model=List[quotation_schemas.QuotationHistoryResponse])
+async def get_versions_of_quotation(quotation_id: int):
+    versions = await quotation_crud.get_all_versions(quotation_id)
+    if not versions:
+        raise HTTPException(status_code=404, detail="No versions found for this quotation")
+    return versions
+
 @app.delete("/quotations/{quotation_id}", response_model=quotation_schemas.QuotationResponse,tags=["Quotations"])
 async def delete_quotation(quotation_id: int, current_user: str = Depends(get_current_user)):
     return await quotation_crud.delete_quotation(current_user, quotation_id)
+
 
 # get all quotations by using userid 
 @app.get("/quotations/user/{user_id}", response_model=List[quotation_schemas.QuotationResponse], tags=["Quotations"])

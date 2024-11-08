@@ -2,10 +2,8 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, ARRAY,Numeric
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.dialects.postgresql import JSONB  # Import JSONB for PostgreSQL support
-
 #from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-
 # Create a base class
 Base = declarative_base()
 
@@ -16,6 +14,7 @@ class User(Base):
     username = Column(String, index=True)
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
+    role = Column(String, nullable=False, default="user")
     # Relationship with Site (back_populates matches the 'user' relationship in Site)
     sites = relationship("Site", back_populates="user")
 
@@ -69,7 +68,9 @@ class Quotation(Base):
     quantity = Column(Integer, nullable=False)
     linear_foot = Column(Float) 
     square_foot = Column(Float)
+    version = Column(Integer, default=1)
     # Relationships
+    history = relationship("QuotationHistory", back_populates="quotation")
     site = relationship("Site", back_populates="quotations")
     product = relationship("Product")
 
@@ -87,3 +88,22 @@ class Dimensions(Base):
 
 # Adding back reference to the Product model
 Product.pivot_table = relationship("Dimensions", order_by=Dimensions.id, back_populates="product")
+
+
+# create a new table to store the history of created quotations
+class QuotationHistory(Base):
+    __tablename__ = "quotation_history"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    quotation_id = Column(Integer, ForeignKey("quotation.id"))
+    width = Column(Float, nullable=True)
+    height = Column(Float, nullable=True)
+    shape = Column(String, nullable=False)
+    custom_shape = Column(String, nullable=True)
+    radius = Column(Integer, nullable=True)
+    quantity = Column(Integer, nullable=False)
+    linear_foot = Column(Float, nullable=True)
+    square_foot = Column(Float, nullable=True)
+    version = Column(Integer)  # Maintain the version history
+    # Relationships
+    quotation = relationship("Quotation", back_populates="history")

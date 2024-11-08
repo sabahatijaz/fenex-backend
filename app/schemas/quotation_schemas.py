@@ -90,3 +90,18 @@ class QuotationResponse(BaseModel):
     class Config(ConfigDict):
         from_attributes = True
 
+class QuotationHistoryResponse(BaseModel):
+    id: int
+    quotation_id: int
+    width: Optional[float] = None
+    height: Optional[float] = None
+    shape: Optional[str] = None
+    custom_shape: Optional[str] = None
+    radius: Optional[int] = None
+    quantity: Optional[int] = None
+    linear_foot: Optional[float] = None
+    square_foot: Optional[float] = None
+    version: int
+
+    class Config:
+        from_attributes = True

@@ -10,8 +10,8 @@ async def seed_dummy_users(db: Database):
     """Seed initial users."""
     dummy_users = [
         User(
-          username="admin",
-          email="admin@example.com",
+          username="amin",
+          email="amin@example.com",
           hashed_password=get_password_hash("admin123")),
         User(
           username="user1",
