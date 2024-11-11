@@ -56,9 +56,21 @@ async def update_quotation(current_user, quotation_id: int, quotation_data: quot
         # Update the current quotation and increment the version
         for key, value in quotation_data.model_dump(exclude_unset=True).items():
             setattr(quotation, key, value)
+
+            # Calculate linear_foot and square_foot if width or height is updated
+            if key == 'width' and value is not None:
+                quotation.linear_foot = ((quotation.width + quotation.height) * 2) / 12  # Update linear foot
+            if key == 'height' and value is not None:
+                quotation.square_foot = (quotation.width * quotation.height) / 144  # Update square foot
+
+        # Increment version before committing the update
         quotation.version += 1
+
+        # Commit the update and refresh the quotation
         await session.commit()
         await session.refresh(quotation)
+
+        # Return the updated quotation
         return quotation
 
 async def get_all_versions(quotation_id: int):
@@ -150,27 +162,6 @@ async def get_quotation(current_user, quotation_id: int):
                                                             )
         print(quotation.product)
         return quotation
-# async def update_quotation(current_user, quotation_id: int, quotation: quotation_schemas.QuotationUpdate):
-#     async with db_instance.async_session() as session:
-#         result = await session.execute(select(models.Quotation).filter(models.Quotation.id == quotation_id))
-#         db_quotation = result.scalars().first()
-#         if db_quotation is None:
-#             raise HTTPException(status_code=404, detail="Quotation not found")
-
-#         if quotation.width is not None:
-#             db_quotation.width = quotation.width
-#             db_quotation.linear_foot = ((db_quotation.width + db_quotation.height) * 2) / 12  # Update calculation logic
-#         if quotation.height is not None:
-#             db_quotation.height = quotation.height
-#             db_quotation.square_foot = (db_quotation.width * db_quotation.height) / 144  # Update calculation logic
-#         if quotation.quote_number is not None:
-#             db_quotation.quote_number = quotation.quote_number
-#         if quotation.client_name is not None:
-#             db_quotation.client_name = quotation.client_name
-
-#         await session.commit()
-#         await session.refresh(db_quotation)
-#         return db_quotation
 
 async def delete_quotation(current_user, quotation_id: int):
     async with db_instance.async_session() as session:
@@ -216,3 +207,25 @@ async def add_quotations_for_site(
 
         return added_quotations
     
+# get all the quotations by show its version
+async def get_current_and_history(quotation_id: int):
+    async with db_instance.async_session() as session:
+        # Fetch the current version of the quotation with the product relationship eagerly loaded
+        current_result = await session.execute(
+            select(models.Quotation)
+            .options(selectinload(models.Quotation.product))  # Eagerly load the product relationship
+            .where(models.Quotation.id == quotation_id)
+        )
+        current_quotation = current_result.scalar_one_or_none()
+
+        if not current_quotation:
+            return None, []
+
+        # Fetch the history of the quotation with all fields loaded
+        history_result = await session.execute(
+            select(models.QuotationHistory)
+            .where(models.QuotationHistory.quotation_id == quotation_id)
+        )
+        quotation_history = history_result.scalars().all()
+
+        return current_quotation, quotation_history

@@ -1,7 +1,7 @@
 
 from pydantic import BaseModel, ConfigDict
 from app.schemas.product_schemas import ProductResponse
-from typing import Optional
+from typing import Optional,List
 from fastapi import Form
 class QuotationCreate(BaseModel):
     site_id: int
@@ -103,5 +103,6 @@ class QuotationHistoryResponse(BaseModel):
     square_foot: Optional[float] = None
     version: int
 
-    class Config:
-        from_attributes = True
+class QuotationWithHistoryResponse(BaseModel):
+    current: QuotationResponse
+    history: List[QuotationHistoryResponse]

@@ -227,7 +227,7 @@ async def delete_product(product_id: int, current_user: str = Depends(get_curren
 # Quotation Endpoints
 
 @app.post("/quotations/", response_model=quotation_schemas.QuotationResponse, tags=["Quotations"])
-async def create_quotation(quotation:quotation_schemas.QuotationCreate ,current_user: str = Depends(get_current_user)):     
+async def create_quotation(quotation:quotation_schemas.QuotationCreate= Depends(quotation_schemas.QuotationCreate.as_form) ,current_user: str = Depends(get_current_user)):     
     print(quotation)
     db_quotation = await quotation_crud.create_quotation(current_user, quotation)
     return db_quotation
@@ -256,7 +256,7 @@ async def update_quotation(quotation_id: int,quotation:quotation_schemas.Quotati
 
 
 
-@app.get("/versions/{quotation_id}", response_model=List[quotation_schemas.QuotationHistoryResponse])
+@app.get("/version/{quotation_id}", response_model=List[quotation_schemas.QuotationHistoryResponse])
 async def get_versions_of_quotation(quotation_id: int):
     versions = await quotation_crud.get_all_versions(quotation_id)
     if not versions:
@@ -347,3 +347,16 @@ async def get_products(
     # Split the product names by comma
     product_names_list = product_names.split(",")
     return await product_crud.get_products_by_names(product_names_list)
+
+@app.get("/versions/{quotation_id}", response_model=quotation_schemas.QuotationWithHistoryResponse)
+async def get_versions_of_quotation(quotation_id: int):
+    current_quotation, quotation_history = await quotation_crud.get_current_and_history(quotation_id)
+    
+    if not current_quotation:
+        raise HTTPException(status_code=404, detail="Quotation not found")
+
+    # Prepare and return the response
+    return {
+        "current": current_quotation,
+        "history": quotation_history
+    }
