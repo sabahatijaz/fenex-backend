@@ -25,7 +25,7 @@ async def create_quotation(current_user, quotation_data: quotation_schemas.Quota
         return quotation
     
 
-async def update_quotation(current_user, quotation_id: int, quotation_data: quotation_schemas.QuotationUpdate):
+async def update_quotation(current_user, quotation_id: int, quotation_data: quotation_schemas.QuotationHeightWidthUpdate):
     async with db_instance.async_session() as session:
         result = await session.execute(
             select(models.Quotation)
@@ -34,11 +34,10 @@ async def update_quotation(current_user, quotation_id: int, quotation_data: quot
         )
         
         quotation = result.scalar_one_or_none()
-
         if not quotation:
             return None
 
-        # Create a history entry before updating the current quotation
+        # Create a history entry before updating
         history_entry = models.QuotationHistory(
             quotation_id=quotation.id,
             width=quotation.width,
@@ -53,24 +52,22 @@ async def update_quotation(current_user, quotation_id: int, quotation_data: quot
         )
         session.add(history_entry)
 
-        # Update the current quotation and increment the version
-        for key, value in quotation_data.model_dump(exclude_unset=True).items():
-            setattr(quotation, key, value)
+        # Update only height and width if provided, and recalculate values
+        if quotation_data.width is not None:
+            quotation.width = quotation_data.width
+            quotation.linear_foot = ((quotation.width + quotation.height) * 2) / 12
 
-            # Calculate linear_foot and square_foot if width or height is updated
-            if key == 'width' and value is not None:
-                quotation.linear_foot = ((quotation.width + quotation.height) * 2) / 12  # Update linear foot
-            if key == 'height' and value is not None:
-                quotation.square_foot = (quotation.width * quotation.height) / 144  # Update square foot
+        if quotation_data.height is not None:
+            quotation.height = quotation_data.height
+            quotation.square_foot = (quotation.width * quotation.height) / 144
 
-        # Increment version before committing the update
+        # Increment version
         quotation.version += 1
 
-        # Commit the update and refresh the quotation
+        # Commit and refresh
         await session.commit()
         await session.refresh(quotation)
 
-        # Return the updated quotation
         return quotation
 
 async def get_all_versions(quotation_id: int):

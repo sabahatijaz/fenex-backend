@@ -39,39 +39,17 @@ class QuotationCreate(BaseModel):
         linear_foot=linear_foot,
         square_foot=square_foot)
 
-class QuotationUpdate(BaseModel):
+class QuotationHeightWidthUpdate(BaseModel):
     width: Optional[float] = None
     height: Optional[float] = None
-    shape: str
-    custom_shape: str
-    radius: int
-    quantity: int
-    calculation: Optional[float] = None   # Optional field for updates
-    quote_number: Optional[str] = None
-    client_name: Optional[str] = None
-    linear_foot: Optional[float] = None
-    square_foot: Optional[float] = None
+
     @classmethod
     def as_form(
-          cls,
-          width: Optional[float] = Form(None),
-          height: Optional[float] = Form(None),
-          quantity: int = Form(None),
-          quote_number: Optional[str] = Form(None),
-          client_name: Optional[str] = Form(None),
-          shape: str = Form(None),
-          custom_shape: str = Form(None),
-          radius: int =Form(None),
-        ) -> 'QuotationUpdate': 
-        return cls(width=width,
-        height=height,
-        shape=shape,
-        custom_shape=custom_shape,
-        radius=radius,
-        quantity=quantity,
-        quote_number=quote_number,
-        client_name=client_name)
-
+        cls,
+        width: Optional[float] = Form(None),
+        height: Optional[float] = Form(None),
+    ) -> 'QuotationHeightWidthUpdate':
+        return cls(width=width, height=height)
 
 class QuotationResponse(BaseModel):
     id: int

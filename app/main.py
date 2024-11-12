@@ -247,12 +247,17 @@ async def read_quotation(quotation_id: int, current_user: str = Depends(get_curr
 
 
 @app.put("/quotations/{quotation_id}", response_model=quotation_schemas.QuotationResponse, tags=["Quotations"])
-async def update_quotation(quotation_id: int,quotation:quotation_schemas.QuotationUpdate = Depends(quotation_schemas.QuotationUpdate.as_form),current_user: str = Depends(get_current_user)):
+async def update_quotation(
+    quotation_id: int,
+    quotation: quotation_schemas.QuotationHeightWidthUpdate = Depends(quotation_schemas.QuotationHeightWidthUpdate.as_form),
+    current_user: str = Depends(get_current_user)
+):
     db_quotation = await quotation_crud.update_quotation(current_user, quotation_id, quotation)
     if db_quotation is None:
         raise HTTPException(status_code=404, detail="Quotation not found")
     
     return db_quotation
+
 
 
 
