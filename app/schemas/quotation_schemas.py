@@ -14,42 +14,14 @@ class QuotationCreate(BaseModel):
     quantity: int
     linear_foot: Optional[float] = None
     square_foot: Optional[float] = None
-    @classmethod
-    def as_form(
-          cls,
-          site_id: int = Form(...),
-          product_id: int = Form(...),
-          width: float = Form(...),
-          height: float = Form(...),
-          quantity: int = Form(...),
-          shape: str = Form(...),
-          custom_shape: str = Form(...),
-          radius: int =Form(...),
-        ) -> 'QuotationCreate':
-        linear_foot = ((width + height) * 2) / 12  
-        square_foot = (width * height) / 144  
-        return cls(site_id=site_id,
-        product_id=product_id,
-        width=width,
-        height=height,
-        quantity=quantity,
-        shape=shape,
-        custom_shape=custom_shape,
-        radius=radius,
-        linear_foot=linear_foot,
-        square_foot=square_foot)
 
+    def __init__(self, **data):
+        super().__init__(**data)
+        self.linear_foot = ((self.width + self.height) * 2) / 12  
+        self.square_foot = (self.width * self.height) / 144
 class QuotationHeightWidthUpdate(BaseModel):
     width: Optional[float] = None
     height: Optional[float] = None
-
-    @classmethod
-    def as_form(
-        cls,
-        width: Optional[float] = Form(None),
-        height: Optional[float] = Form(None),
-    ) -> 'QuotationHeightWidthUpdate':
-        return cls(width=width, height=height)
 
 class QuotationResponse(BaseModel):
     id: int

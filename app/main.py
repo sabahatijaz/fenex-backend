@@ -227,7 +227,7 @@ async def delete_product(product_id: int, current_user: str = Depends(get_curren
 # Quotation Endpoints
 
 @app.post("/quotations/", response_model=quotation_schemas.QuotationResponse, tags=["Quotations"])
-async def create_quotation(quotation:quotation_schemas.QuotationCreate= Depends(quotation_schemas.QuotationCreate.as_form) ,current_user: str = Depends(get_current_user)):     
+async def create_quotation(quotation:quotation_schemas.QuotationCreate ,current_user: str = Depends(get_current_user)):     
     print(quotation)
     db_quotation = await quotation_crud.create_quotation(current_user, quotation)
     return db_quotation
@@ -249,7 +249,7 @@ async def read_quotation(quotation_id: int, current_user: str = Depends(get_curr
 @app.put("/quotations/{quotation_id}", response_model=quotation_schemas.QuotationResponse, tags=["Quotations"])
 async def update_quotation(
     quotation_id: int,
-    quotation: quotation_schemas.QuotationHeightWidthUpdate = Depends(quotation_schemas.QuotationHeightWidthUpdate.as_form),
+    quotation: quotation_schemas.QuotationHeightWidthUpdate,
     current_user: str = Depends(get_current_user)
 ):
     db_quotation = await quotation_crud.update_quotation(current_user, quotation_id, quotation)
