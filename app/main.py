@@ -234,8 +234,8 @@ async def create_quotation(quotation:quotation_schemas.QuotationCreate ,current_
 
 
 @app.get("/quotations/", response_model=List[quotation_schemas.QuotationResponse],tags=["Quotations"])
-async def read_quotations(skip: int = 0, limit: int = 10, current_user: str = Depends(get_current_user)):
-    return await quotation_crud.get_quotations(current_user, skip=skip, limit=limit)
+async def read_quotations(current_user: str = Depends(get_current_user)):
+    return await quotation_crud.get_quotations(current_user)
 
 
 @app.get("/quotations/{quotation_id}", response_model=quotation_schemas.QuotationResponse,tags=["Quotations"])

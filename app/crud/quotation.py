@@ -75,9 +75,9 @@ async def get_all_versions(quotation_id: int):
         result = await session.execute(select(models.QuotationHistory).filter(models.QuotationHistory.quotation_id == quotation_id))
         return result.scalars().all()
     
-async def get_quotations(current_user, skip: int = 0, limit: int = 10):
+async def get_quotations(current_user):
     async with db_instance.async_session() as session:
-        result = await session.execute(select(models.Quotation).offset(skip).limit(limit))
+        result = await session.execute(select(models.Quotation))
         quotations= result.scalars().all()
         res_quotes=[]
         for i in range(len(quotations)):
