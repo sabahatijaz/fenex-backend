@@ -10,8 +10,8 @@ async def seed_dummy_users(db: Database):
     """Seed initial users."""
     dummy_users = [
         User(
-          username="amin",
-          email="amin@example.com",
+          username="admin",
+          email="admin@example.com",
           hashed_password=get_password_hash("admin123")),
         User(
           username="user1",
@@ -37,10 +37,6 @@ async def seed_dummy_users(db: Database):
 async def seed_dummy_products(db: Database):
     """Seed dummy product data."""
     dummy_products = [
-        Product(product_name="Canopy", glass_general_price=30.0, shipping_glass_supplier_price=6.0,
-                aluminum_frame_price=15.0, stainless_steel_price=0.0, local_shipping_price=0.0,
-                paint_al_frame_price=8.0, cut_assemble_frame_price=5.0, setting_block_price=6.0,
-                install_glass_price=9.0, fix_cost_price=45.0),
         Product(product_name="Windows", glass_general_price=90.0, shipping_glass_supplier_price=10.0,
                 aluminum_frame_price=45.0, stainless_steel_price=0.0, local_shipping_price=0.0,
                 paint_al_frame_price=14.0, cut_assemble_frame_price=25.0, setting_block_price=6.0,
@@ -105,8 +101,6 @@ async def seed_dummy_quotations(db: Database, site_ids, product_ids):
                   site_id=site_ids[2], product_id=product_ids[7]),
         Quotation(width=78.0, height=104.0, shape="Flat", custom_shape=None, radius=None, quantity=2,
                   site_id=site_ids[3], product_id=product_ids[8]),
-        Quotation(width=60.0, height=60.0, shape="circle", custom_shape="circle", radius=30, quantity=2,
-                  site_id=site_ids[4], product_id=product_ids[9]),
     ]
     async with db.async_session() as session:
         session.add_all(dummy_quotations)
