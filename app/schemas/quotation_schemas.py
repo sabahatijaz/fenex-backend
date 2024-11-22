@@ -2,7 +2,7 @@
 from pydantic import BaseModel, ConfigDict
 from app.schemas.product_schemas import ProductResponse
 from typing import Optional,List
-from fastapi import Form
+from datetime import datetime
 class QuotationCreate(BaseModel):
     site_id: int
     product_id: int
@@ -36,6 +36,8 @@ class QuotationResponse(BaseModel):
     linear_foot: Optional[float] = None
     square_foot: Optional[float] = None
     product: ProductResponse
+    created_at: Optional[datetime]=None
+    updated_at: Optional[datetime] = None 
 
     class Config(ConfigDict):
         from_attributes = True
@@ -52,6 +54,9 @@ class QuotationHistoryResponse(BaseModel):
     linear_foot: Optional[float] = None
     square_foot: Optional[float] = None
     version: int
+    created_at: Optional[datetime]=None
+    updated_at: Optional[datetime]=None
+
 
 class QuotationWithHistoryResponse(BaseModel):
     current: QuotationResponse

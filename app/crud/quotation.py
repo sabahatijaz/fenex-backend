@@ -7,13 +7,19 @@ from app.crud.product import get_product
 from sqlalchemy.future import select
 from typing import List
 from sqlalchemy.orm import selectinload
+from datetime import datetime
+import pytz
 # Initialize the Database instance
 db_instance = Database()
 
-async def create_quotation(current_user, quotation_data: quotation_schemas.QuotationCreate):
+async def create_quotation(current_user, quotation_data: quotation_schemas.QuotationCreate, created_at=None):
     async with db_instance.async_session() as session:
+        # Add created_at to the data being passed to the model
+        quotation_dict = quotation_data.model_dump()
+        if created_at:
+            quotation_dict['created_at'] = created_at
 
-        quotation = models.Quotation(**quotation_data.model_dump())
+        quotation = models.Quotation(**quotation_dict)
         session.add(quotation)
         await session.commit()
         await session.refresh(quotation)
@@ -48,7 +54,9 @@ async def update_quotation(current_user, quotation_id: int, quotation_data: quot
             quantity=quotation.quantity,
             linear_foot=quotation.linear_foot,
             square_foot=quotation.square_foot,
-            version=quotation.version
+            version=quotation.version,
+            created_at=quotation.created_at,
+            updated_at= quotation.updated_at
         )
         session.add(history_entry)
 
@@ -63,6 +71,7 @@ async def update_quotation(current_user, quotation_id: int, quotation_data: quot
 
         # Increment version
         quotation.version += 1
+        quotation.updated_at = datetime.now(pytz.utc)
 
         # Commit and refresh
         await session.commit()
@@ -112,7 +121,9 @@ async def get_quotations(current_user):
                                                             quantity=quote.quantity,
                                                             linear_foot=quote.linear_foot,
                                                             square_foot=quote.square_foot,
-                                                            product=product
+                                                            product=product,
+                                                            created_at=quote.created_at,
+                                                            updated_at=quote.updated_at
                                                             ))
         return res_quotes
 
@@ -155,7 +166,9 @@ async def get_quotation(current_user, quotation_id: int):
                                                             quantity=quote.quantity,
                                                             linear_foot=quote.linear_foot,
                                                             square_foot=quote.square_foot,
-                                                            product=product
+                                                            product=product,
+                                                            created_at=quote.created_at,
+                                                            updated_at=quote.updated_at
                                                             )
         print(quotation.product)
         return quotation

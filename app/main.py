@@ -12,6 +12,7 @@ from app.models import Dimensions,Product
 from app.database import Database 
 from sqlalchemy.future import select 
 import httpx
+from datetime import datetime, timezone
 # Initialize FastAPI app instance
 app = FastAPI()
 db_instance = Database()
@@ -229,7 +230,8 @@ async def delete_product(product_id: int, current_user: str = Depends(get_curren
 @app.post("/quotations/", response_model=quotation_schemas.QuotationResponse, tags=["Quotations"])
 async def create_quotation(quotation:quotation_schemas.QuotationCreate ,current_user: str = Depends(get_current_user)):     
     print(quotation)
-    db_quotation = await quotation_crud.create_quotation(current_user, quotation)
+    utc_now = datetime.now(timezone.utc)
+    db_quotation = await quotation_crud.create_quotation(current_user, quotation,created_at=utc_now)
     return db_quotation
 
 
@@ -255,10 +257,8 @@ async def update_quotation(
     db_quotation = await quotation_crud.update_quotation(current_user, quotation_id, quotation)
     if db_quotation is None:
         raise HTTPException(status_code=404, detail="Quotation not found")
-    
+    db_quotation.updated_at = datetime.now(timezone.utc)
     return db_quotation
-
-
 
 
 @app.get("/version/{quotation_id}", response_model=List[quotation_schemas.QuotationHistoryResponse])

@@ -1,6 +1,5 @@
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field , model_validator
 from typing import Optional, List, Literal
-from fastapi import Form
 
 class Address(BaseModel):
     street: str
@@ -25,27 +24,6 @@ class SiteCreate(BaseModel):
     risks: List[str] = []  # List of risks associated with the site
     user_id: int  # Associated user ID
 
-    @classmethod
-    def as_form(
-        cls,
-        sitename: str = Form(...),
-        street: str = Form(...),
-        city: str = Form(...),
-        state: str = Form(...),
-        country: str = Form(...),
-        postal_code: str = Form(...),
-        site_type: Literal['Residential', 'Commercial'] = Form(...),
-        risks: List[str] = Form(...),
-        user_id: int = Form(...)
-    ) -> 'SiteCreate':
-        address = Address(street=street, city=city, state=state, country=country, postal_code=postal_code)
-        return cls(
-            sitename=sitename,
-            site_location=address,
-            site_type=site_type,
-            risks=risks,
-            user_id=user_id
-        )
 
 class SiteResponse(BaseModel):
     id: int
@@ -54,9 +32,17 @@ class SiteResponse(BaseModel):
     site_type: Literal['Residential', 'Commercial']
     risks: List[str]
     user_id: Optional[int] = None
+    site_id: str  # This will store the formatted site_id
 
-    class Config(ConfigDict):
-        from_attributes = True
+    @model_validator(mode='before')
+    def format_site_id(cls, values):
+        site_id = values.id  
+        if site_id:
+            values.site_id = f"FX-{site_id}"  
+        return values
+
+    class Config:
+        from_attributes = True 
         
 class SiteUpdate(BaseModel):
     site_id: Optional[str] = None
@@ -66,26 +52,3 @@ class SiteUpdate(BaseModel):
     risks: Optional[List[str]] = Field(default_factory=list)
     user_id: Optional[int] = None
 
-    @classmethod
-    def as_form(
-        cls,
-        site_id: str = Form(...),
-        name: str = Form(...),
-        street: str = Form(...),
-        city: str = Form(...),
-        state: str = Form(...),
-        country: str = Form(...),
-        postal_code: str = Form(...),
-        site_type: Literal['Residential', 'Commercial'] = Form(...),
-        risks: List[str] = Form(...),
-        user_id: int = Form(...)
-    ) -> 'SiteUpdate':
-        address = Address(street=street, city=city, state=state, country=country, postal_code=postal_code)
-        return cls(
-            site_id=site_id,
-            sitename=name,
-            site_location=address,
-            site_type=site_type,
-            risks=risks,
-            user_id=user_id
-        )

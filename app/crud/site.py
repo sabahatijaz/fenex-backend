@@ -33,8 +33,13 @@ async def create_site(current_user, site: site_schemas.SiteCreate):
 
 async def get_sites(current_user, skip: int = 0, limit: int = 10):
     async with db_instance.async_session() as session:  # Assuming db_instance is defined elsewhere
-        result = await session.execute(
-            select(models.Site).filter(models.Site.user_id == current_user.id).offset(skip).limit(limit)
+        if current_user.role == "admin":
+            result = await session.execute(
+                select(models.Site).offset(skip).limit(limit)
+            )
+        else:
+            result = await session.execute(
+               select(models.Site).filter(models.Site.user_id == current_user.id).offset(skip).limit(limit)
         )
         return result.scalars().all()
 
@@ -126,7 +131,9 @@ async def get_quotations_by_site_id(current_user, site_id: int):
                                                             quantity=quote.quantity,
                                                             linear_foot=quote.linear_foot,
                                                             square_foot=quote.square_foot,
-                                                            product=product
+                                                            product=product,
+                                                            created_at=quote.created_at,
+                                                            updated_at=quote.updated_at
                                                             ))
 
         

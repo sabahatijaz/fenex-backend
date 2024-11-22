@@ -1,9 +1,12 @@
 
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, ARRAY,Numeric
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, ARRAY,Numeric,DateTime
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.dialects.postgresql import JSONB  # Import JSONB for PostgreSQL support
 #from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
+from datetime import datetime
+# from sqlalchemy.sql import func
+import pytz
 # Create a base class
 Base = declarative_base()
 
@@ -69,6 +72,8 @@ class Quotation(Base):
     linear_foot = Column(Float) 
     square_foot = Column(Float)
     version = Column(Integer, default=1)
+    created_at = Column(DateTime(timezone=True), default=datetime.now(pytz.utc))
+    updated_at = Column(DateTime(timezone=True), nullable=True)
     # Relationships
     history = relationship("QuotationHistory", back_populates="quotation")
     site = relationship("Site", back_populates="quotations")
@@ -105,5 +110,7 @@ class QuotationHistory(Base):
     linear_foot = Column(Float, nullable=True)
     square_foot = Column(Float, nullable=True)
     version = Column(Integer)  # Maintain the version history
+    created_at = Column(DateTime(timezone=True), default=datetime.now(pytz.utc))
+    updated_at = Column(DateTime(timezone=True), nullable=True)
     # Relationships
     quotation = relationship("Quotation", back_populates="history")
