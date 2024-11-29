@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field , model_validator
 from typing import Optional, List, Literal
-
+from datetime import datetime
 class Address(BaseModel):
     street: str
     city: str
@@ -33,6 +33,7 @@ class SiteResponse(BaseModel):
     risks: List[str]
     user_id: Optional[int] = None
     site_id: str  # This will store the formatted site_id
+    last_updated:Optional[datetime] =None
 
     @model_validator(mode='before')
     def format_site_id(cls, values):
@@ -51,4 +52,5 @@ class SiteUpdate(BaseModel):
     site_type: Optional[Literal['Residential', 'Commercial']] = None
     risks: Optional[List[str]] = Field(default_factory=list)
     user_id: Optional[int] = None
+    last_updated: Optional[datetime] =None
 

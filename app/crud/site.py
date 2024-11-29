@@ -1,11 +1,13 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.sql import func
 from fastapi import HTTPException, Depends
 from app.database import Database
 from .. import models
 from ..schemas import site_schemas, common, product_schemas, quotation_schemas
 from app.crud.product import get_product
 import httpx
+from datetime import datetime,timezone
 # Initialize the Database instance
 db_instance = Database()
 
@@ -21,14 +23,14 @@ async def create_site(current_user, site: site_schemas.SiteCreate):
             site_location=site.site_location.to_dict(),
             site_type=site.site_type,
             risks=site.risks,
-            user_id=site.user_id  # Associate site with the user
+            user_id=site.user_id, 
+            last_updated=datetime.now(timezone.utc) 
         )
         print(new_site.site_location)
 
         session.add(new_site)
         await session.commit()
         await session.refresh(new_site)
-
         return new_site
 
 async def get_sites(current_user, skip: int = 0, limit: int = 10):
@@ -41,7 +43,18 @@ async def get_sites(current_user, skip: int = 0, limit: int = 10):
             result = await session.execute(
                select(models.Site).filter(models.Site.user_id == current_user.id).offset(skip).limit(limit)
         )
-        return result.scalars().all()
+        sites = result.scalars().all()
+
+        for site in sites:
+            if site.last_updated is None:
+                latest_updated_at = await session.scalar(
+                    select(func.max(models.Quotation.updated_at))
+                    .where(models.Quotation.site_id == site.id)
+                )
+                site.last_updated = latest_updated_at or site.last_updated  
+
+        return sites
+    
 
 
 async def get_site(current_user, site_id: int):
@@ -50,6 +63,14 @@ async def get_site(current_user, site_id: int):
         site = result.scalars().first()
         if site is None:
             raise HTTPException(status_code=404, detail="Site not found")
+        
+        if site.last_updated is None:
+            latest_updated_at = await session.scalar(
+                select(func.max(models.Quotation.updated_at))
+                .where(models.Quotation.site_id == site_id)
+            )
+            site.last_updated = latest_updated_at or site.last_updated
+
         return site
 
 async def delete_site(current_user, site_id: int):
@@ -82,6 +103,12 @@ async def update_site(current_user, site_id: int, site: site_schemas.SiteUpdate)
             if not user:
                 raise HTTPException(status_code=400, detail="Invalid user ID")
             db_site.user_id = site.user_id
+        
+        latest_updated_at = await session.scalar(
+            select(func.max(models.Quotation.updated_at))
+            .where(models.Quotation.site_id == site_id)
+        )
+        db_site.last_updated = latest_updated_at or db_site.last_updated
 
         await session.commit()
         await session.refresh(db_site)

@@ -5,8 +5,7 @@ from sqlalchemy.dialects.postgresql import JSONB  # Import JSONB for PostgreSQL 
 #from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
-# from sqlalchemy.sql import func
-import pytz
+from sqlalchemy.sql import func
 # Create a base class
 Base = declarative_base()
 
@@ -29,6 +28,7 @@ class Site(Base):
     site_location = Column(JSONB, nullable=False)
     site_type = Column(String, nullable=False)
     risks = Column(ARRAY(String), nullable=True)
+    last_updated=Column(DateTime(timezone=True), default=func.now(), nullable=False)
     
     # Foreign key to link with user
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
@@ -72,8 +72,8 @@ class Quotation(Base):
     linear_foot = Column(Float) 
     square_foot = Column(Float)
     version = Column(Integer, default=1)
-    created_at = Column(DateTime(timezone=True), default=datetime.now(pytz.utc))
-    updated_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
     # Relationships
     history = relationship("QuotationHistory", back_populates="quotation")
     site = relationship("Site", back_populates="quotations")
@@ -110,7 +110,7 @@ class QuotationHistory(Base):
     linear_foot = Column(Float, nullable=True)
     square_foot = Column(Float, nullable=True)
     version = Column(Integer)  # Maintain the version history
-    created_at = Column(DateTime(timezone=True), default=datetime.now(pytz.utc))
-    updated_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
     # Relationships
     quotation = relationship("Quotation", back_populates="history")

@@ -7,8 +7,7 @@ from app.crud.product import get_product
 from sqlalchemy.future import select
 from typing import List
 from sqlalchemy.orm import selectinload
-from datetime import datetime
-import pytz
+from datetime import datetime,timezone
 # Initialize the Database instance
 db_instance = Database()
 
@@ -23,6 +22,13 @@ async def create_quotation(current_user, quotation_data: quotation_schemas.Quota
         session.add(quotation)
         await session.commit()
         await session.refresh(quotation)
+    
+        site = await session.execute(select(models.Site).filter(models.Site.id == quotation.site_id))
+        site = site.scalars().first()
+        if site:
+            site.last_updated = datetime.now(timezone.utc)  
+            await session.commit()  
+            await session.refresh(site)
         await session.execute(
             select(models.Quotation)
             .options(selectinload(models.Quotation.product))
@@ -71,12 +77,18 @@ async def update_quotation(current_user, quotation_id: int, quotation_data: quot
 
         # Increment version
         quotation.version += 1
-        quotation.updated_at = datetime.now(pytz.utc)
+        quotation.updated_at = datetime.now(timezone.utc)
 
         # Commit and refresh
         await session.commit()
         await session.refresh(quotation)
 
+        site = await session.execute(select(models.Site).filter(models.Site.id == quotation.site_id))
+        site = site.scalars().first()
+        if site:
+            site.last_updated = datetime.now(timezone.utc)  
+            await session.commit()  
+            await session.refresh(site)
         return quotation
 
 async def get_all_versions(quotation_id: int):

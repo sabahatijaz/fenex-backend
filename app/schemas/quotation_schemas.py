@@ -36,8 +36,8 @@ class QuotationResponse(BaseModel):
     linear_foot: Optional[float] = None
     square_foot: Optional[float] = None
     product: ProductResponse
-    created_at: Optional[datetime]=None
-    updated_at: Optional[datetime] = None 
+    created_at: datetime
+    updated_at: datetime 
 
     class Config(ConfigDict):
         from_attributes = True
@@ -54,8 +54,8 @@ class QuotationHistoryResponse(BaseModel):
     linear_foot: Optional[float] = None
     square_foot: Optional[float] = None
     version: int
-    created_at: Optional[datetime]=None
-    updated_at: Optional[datetime]=None
+    created_at: datetime
+    updated_at: datetime
 
 
 class QuotationWithHistoryResponse(BaseModel):
